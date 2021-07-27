@@ -1,2 +1,10 @@
 # IDE
 .idea/
+
+# Output & temporary files
+elf
+bytecode
+bootloader.lua
+
+# binaries
+compiler/compiler

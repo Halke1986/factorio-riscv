@@ -8,15 +8,16 @@
 #define RVMODEL_BOOT
 
 // Test to see if a specific test has passed or not.
+// It's left empty - assertion is done in hardware.
 #define RVMODEL_IO_ASSERT_GPR_EQ(_SP, _R, _I)
 
 // Just let the PC advance past the end of the code. It will cause the CPU to
 // fetch 0x0 instruction and halt.
 #define RVMODEL_HALT
 
-// The .align 4 ensures that the signature ends at a 16-byte boundary
+// The .align 10 ensures that the signature ends frame (1024 bytes) boundary.
 #define RVMODEL_DATA_BEGIN                                              \
-  .align 4; .global begin_signature; begin_signature:
+  .align 10; .global begin_signature; begin_signature:
 
 #define RVMODEL_DATA_END                                                      \
   .global end_signature; end_signature:                             \
@@ -34,19 +35,6 @@
 //
 //
 
-//
-////TODO: declare the start of your signature region here. Nothing else to be used here.
-//// The .align 4 ensures that the signature ends at a 16-byte boundary
-//#define RVMODEL_DATA_BEGIN                                              \
-//  .align 4; .global begin_signature; begin_signature:
-//
-////TODO: declare the end of the signature region here. Add other target specific contents here.
-//#define RVMODEL_DATA_END                                                      \
-//  .global end_signature; end_signature:                             \
-//  RVMODEL_DATA_SECTION
-//
-//
-//#define RVMODEL_BOOT
 //
 //// _SP = (volatile register)
 ////TODO: Macro to output a string to IO

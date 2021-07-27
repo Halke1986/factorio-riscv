@@ -1,6 +1,8 @@
 /c local map={}
 
-local byte_code = {###}
+local byte_code = {
+
+}
 
 local signal_table = {
 	{type="item", name="wooden-chest"},
@@ -284,28 +286,36 @@ function encode_instructions()
 	local signal_num = array_len(signal_table)
 
 	local start = game.player.selected
-	local x = 0
-	local y = start.position.y - 1
 
-	local cc = {}
+	local page = 0
+	local word = 0
+
+	local cc = game.player.surface.create_entity({
+	    name = "constant-combinator",
+	    position = {x=start.position.x + 2, y=start.position.y},
+	    force = game.forces.player})
 
 	for n,inst in pairs(byte_code) do
-		local idx = n - 1
 
-		if idx % 20 == 0 or idx % signal_num == 0 then
-			if idx % 20 == 0 then
-				x = x + 1
-			end
-
-			if idx % signal_num == 0 then
-				x = start.position.x + 2
-				y = y + 1
-			end
-
-			cc = game.player.surface.create_entity({name = "constant-combinator", position = {x=x,y=y}, force = game.forces.player})
+		if word % 20 == 0 then
+		    cc = game.player.surface.create_entity({
+                name = "constant-combinator",
+                position = {x=start.position.x + 2 + word / 20, y=start.position.y + page},
+                force = game.forces.player})
+		elseif word == 256 then
+		    page = page + 1
+		    word = 0
+            cc = game.player.surface.create_entity({
+                name = "constant-combinator",
+                position = {x=start.position.x + 2, y=start.position.y + page},
+                force = game.forces.player})
 		end
 
-		cc.get_control_behavior().set_signal(idx % 20 + 1, {signal=signal_table[idx % signal_num + 1], count=overflow(inst)})
+        if inst ~= 0 then
+		    cc.get_control_behavior().set_signal(word % 20 + 1, {signal=signal_table[word + 1], count=overflow(inst)})
+		end
+
+		word = word + 1
 	end
 
 end

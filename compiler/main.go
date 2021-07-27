@@ -1,83 +1,209 @@
 package main
 
 import (
-	"bufio"
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
-	"strconv"
+
+	"github.com/yalue/elf_reader"
 )
 
-type Instruction struct {
-	InstructionType
-	encoded uint32
+const (
+	textSectionName = ".text.init"
+	dataSectionName = ".data"
+
+	wordSize  = 4
+	frameSize = wordSize * 256
+)
+
+type elfSection struct {
+	header elf_reader.ELFSectionHeader
+	bytes  []byte
+}
+
+type elfSections struct {
+	text elfSection
+	data elfSection
 }
 
 func main() {
-	instructions, err := readInstructions()
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: compiler elf-input-path bytecode-output-path")
+		return
+	}
+
+	rawElf, err := ioutil.ReadFile(os.Args[1])
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//for n, i := range instructions {
-	//	fmt.Printf("%d:  %s %d\n", (n+1)*4, i.Name, i.encoded)
-	//}
-
-	//Print instructions and base 10 integers.
-	for _, i := range instructions {
-		fmt.Printf("%d,", i.encoded)
+	words, err := compile(rawElf)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	//encountered := map[string]Instruction{}
-	//for _, i := range instructions {
-	//	encountered[i.Name] = i
-	//}
-	//
-	//for k := range encountered {
-	//	fmt.Println(k)
-	//}
+	output, err := os.Create(os.Args[2])
+	defer func() { _ = output.Close() }()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	for _, w := range words {
+		_, err := fmt.Fprintf(output, "%d,", w)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 }
 
-func readInstructions() ([]Instruction, error) {
-	// Read code from pipe.
-	// Code is supposed to be the output of `od -An -x` command, eg:
-	// 0113 ff41 2423 0011 2223 0081 0413 00c1
-	// where each 32-bit instruction is split into 2 2-byte parts encoded on hex.
-	buf, err := ioutil.ReadAll(bufio.NewReader(os.Stdin))
+// compile elf file to bytecode.
+func compile(rawElf []byte) ([]uint32, error) {
+	elf, err := elf_reader.ParseELFFile(rawElf)
 	if err != nil {
 		return nil, err
 	}
 
-	// Remove whitespaces.
-	buf = bytes.ReplaceAll(buf, []byte("\n"), nil)
-	buf = bytes.TrimSpace(buf)
+	sections, err := readSections(elf)
+	if err != nil {
+		return nil, err
+	}
 
-	// Merge and parse instruction parts.
-	parts := bytes.Split(buf, []byte(" "))
-	instructions := []Instruction(nil)
-	for i := 0; i < len(parts)/2; i++ {
+	text, err := handleTextSection(*sections)
+	if err != nil {
+		return nil, err
+	}
 
-		encoded, err := strconv.ParseInt(string(parts[2*i+1])+string(parts[2*i]), 16, 64)
+	data, err := handleDataSection(*sections)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(text, data...), nil
+}
+
+// readSections reads selected elf file sections.
+func readSections(elf elf_reader.ELFFile) (*elfSections, error) {
+	allSections := map[string]elfSection{}
+
+	sectionNum := elf.GetSectionCount()
+	for i := uint16(0); i < sectionNum; i++ {
+		// Section 0 has no name.
+		if i == 0 {
+			continue
+		}
+
+		name, err := elf.GetSectionName(i)
 		if err != nil {
 			return nil, err
 		}
 
-		//fmt.Printf("%x: %x \n", (i*4)+0x240, encoded)
-
-		// Last instructions can be 0x0.
-		if encoded == 0 {
-			break
-		}
-
-		instruction, err := parseInstruction(uint32(encoded))
+		header, err := elf.GetSectionHeader(i)
 		if err != nil {
-			return nil, fmt.Errorf("instruction %x: %x %s", (i*4)+0x240, encoded, err.Error())
+			return nil, err
 		}
 
-		instructions = append(instructions, Instruction{instruction, uint32(encoded)})
+		bytes, err := elf.GetSectionContent(i)
+		if err != nil {
+			return nil, err
+		}
+
+		allSections[name] = elfSection{
+			header: header,
+			bytes:  bytes,
+		}
 	}
 
-	return instructions, nil
+	text, found := allSections[textSectionName]
+	if !found {
+		return nil, fmt.Errorf("section %s not found", textSectionName)
+	}
+
+	data, found := allSections[dataSectionName]
+	if !found {
+		return nil, fmt.Errorf("section %s not found", dataSectionName)
+	}
+
+	return &elfSections{
+		text: text,
+		data: data,
+	}, nil
+}
+
+// handleTextSection reads bytecode and asserts instructions.
+func handleTextSection(sections elfSections) ([]uint32, error) {
+	if sections.text.header.GetVirtualAddress() != 0 {
+		fmt.Printf("warning: %s section not starting at address 0x0\n", textSectionName)
+	}
+
+	words, err := parseSection(sections.text, textSectionName)
+	if err != nil {
+		return nil, err
+	}
+
+	usedInstructions := map[string]int{}
+
+	for _, w := range words {
+		// Null instruction is used for padding.
+		if w == 0 {
+			continue
+		}
+
+		inst, err := parseInstruction(w)
+		if err != nil {
+			return nil, err
+		}
+
+		usedInstructions[inst.Name]++
+	}
+
+	for k, v := range usedInstructions {
+		fmt.Println(k, v)
+	}
+
+	return words, nil
+}
+
+// handleDataSection reads elf data and adds padding between text and data.
+func handleDataSection(sections elfSections) ([]uint32, error) {
+	textEnd := sections.text.header.GetVirtualAddress() + sections.text.header.GetSize()
+	padding := (sections.data.header.GetVirtualAddress() - textEnd) / wordSize
+
+	fmt.Printf("padding before data: %d\n", padding)
+
+	if padding < 0 {
+		return nil, fmt.Errorf("sections overlap")
+	}
+
+	words, err := parseSection(sections.data, dataSectionName)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(make([]uint32, padding), words...), nil
+}
+
+// parseSection reads elfSection contents as slice of 32-bit words, and displays warnings.
+func parseSection(section elfSection, sectionName string) ([]uint32, error) {
+	if section.header.GetVirtualAddress()%frameSize != 0 {
+		fmt.Printf("warning: %s section not aligned to frame boundry\n", sectionName)
+	}
+
+	if section.header.GetSize()%wordSize != 0 {
+		return nil, fmt.Errorf("%s section not multiple of %d bytes\n", sectionName, wordSize)
+	}
+
+	fmt.Println(section.header.String())
+
+	words := make([]uint32, len(section.bytes)/wordSize)
+	for i := 0; i < len(words); i++ {
+
+		b := i * wordSize
+		words[i] += uint32(section.bytes[b]) << 0
+		words[i] += uint32(section.bytes[b+1]) << 8
+		words[i] += uint32(section.bytes[b+2]) << 16
+		words[i] += uint32(section.bytes[b+3]) << 24
+	}
+
+	return words, nil
 }
