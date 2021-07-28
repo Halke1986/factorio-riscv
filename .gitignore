@@ -5,6 +5,7 @@
 elf
 bytecode
 bootloader.lua
+out
 
 # binaries
 compiler/compiler

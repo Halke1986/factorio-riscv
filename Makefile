@@ -2,7 +2,7 @@
 compiler: # build the elf to Factorio bytecode compiler
 	cd ./compiler && go build && cd ..
 
-compile:
+bootloader:
 	@ ./compiler/compiler elf bytecode
 	@ cp bootloader-template.lua bootloader.lua
 	@ sed -i -e '/local byte_code = {/r bytecode' bootloader.lua

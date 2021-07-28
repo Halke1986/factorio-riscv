@@ -3,9 +3,18 @@
 
 #define XLEN 32
 #define TEST_CASE_1
+#define ROM_MEM_SIZE 1073741824
 
 // Any specific target init code should be put here.
 #define RVMODEL_BOOT
+    .section .text.init;
+    nop
+//    .section .text.init;
+//    .option push
+//    .option norelax
+//        li gp,ROM_MEM_SIZE       # The end of the RAM is queried from a memory-mapped hardware configuration register.
+//        lw sp,0(gp)              # Initializes the stack pointer sp at the end of the RAM.
+//    .option pop
 
 // Test to see if a specific test has passed or not.
 // It's left empty - assertion is done in hardware.
