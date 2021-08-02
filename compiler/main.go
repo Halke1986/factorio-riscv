@@ -50,7 +50,7 @@ func main() {
 	}
 
 	for _, w := range words {
-		_, err := fmt.Fprintf(output, "%d,", w)
+		_, err := fmt.Fprintf(output, "\"%x\",", w)
 		if err != nil {
 			log.Fatal(err)
 		}

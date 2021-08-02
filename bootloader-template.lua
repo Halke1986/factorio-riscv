@@ -311,8 +311,8 @@ function encode_instructions()
                 force = game.forces.player})
 		end
 
-        if inst ~= 0 then
-		    cc.get_control_behavior().set_signal(word % 20 + 1, {signal=signal_table[word + 1], count=overflow(inst)})
+        if inst ~= "0" then
+		    cc.get_control_behavior().set_signal(word % 20 + 1, {signal=signal_table[word + 1], count=overflow(tonumber(inst,16))})
 		end
 
 		word = word + 1
