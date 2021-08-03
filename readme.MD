@@ -5,7 +5,7 @@
 
 ## ROM Memory
 
-* Executable code is stored in ROM memory, starting at address `0x4000000`.
+* Executable code is stored in ROM memory, starting at address `0x4000000`. Program execution starts at `0x4000000`.
 
 ## RAM Memory
 
