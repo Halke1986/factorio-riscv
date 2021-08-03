@@ -7,8 +7,11 @@ bootloader:
 	@ cp bootloader-template.lua bootloader.lua
 	@ sed -i -e '/local byte_code = {/r bytecode' bootloader.lua
 
-disassembly: # print disassembly of elf file
+disassembly: # print disassembly of the elf file .text section
 	riscv64-linux-gnu-objdump -d elf -t
+
+print-data: # print hex dump of the elf file .data section
+	riscv64-linux-gnu-objdump -s -j .data elf
 
 compliance-test: src_dir = programs/compliance-tests
 compliance-test: # compile the selected compliance test
@@ -26,7 +29,8 @@ bench-qsort:
     -nostdlib\
     -ffreestanding\
     -march=rv32i\
-    -mabi=ilp32
+    -mabi=ilp32\
+    -T$(src_dir)/env/link.ld
 
 bench-qsort-host: src_dir = programs/benchmarks
 bench-qsort-host:

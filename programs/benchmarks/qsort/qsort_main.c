@@ -38,6 +38,26 @@
 #define SWAP_IF_GREATER(a, b) do { if ((a) > (b)) SWAP(a, b); } while (0)
 
 //--------------------------------------------------------------------------
+// Main
+
+static void insertion_sort(size_t n, type arr[]);
+static void selection_sort(size_t n, type arr[]);
+void sort(size_t n, type arr[]);
+
+int main( int argc, char* argv[] )
+{
+
+  sort( DATA_SIZE, input_data );
+
+//   for (int i = 0; i < DATA_SIZE; i++){
+//          printf("%d\n", input_data[i]);
+//      }
+
+
+  return 0;
+}
+
+//--------------------------------------------------------------------------
 // Quicksort function
 
 static void insertion_sort(size_t n, type arr[])
@@ -130,31 +150,4 @@ void sort(size_t n, type arr[])
       }
     }
   }
-}
-
-//--------------------------------------------------------------------------
-// Main
-
-int main( int argc, char* argv[] )
-{
-#if PREALLOCATE
-  // If needed we preallocate everything in the caches
-  sort(DATA_SIZE, verify_data);
-  if (verify(DATA_SIZE, input_data, input_data))
-    return 1;
-#endif
-
-  // Do the sort
-//  setStats(1);
-//  sort( DATA_SIZE, input_data );
-//  setStats(0);
-
-    for (int i = 0; i < DATA_SIZE; i++){
-        printf("%d\n", input_data[i]);
-    }
-
-    printf("%d\n", verify( DATA_SIZE, input_data, verify_data ));
-
-  // Check the results
-  return verify( DATA_SIZE, input_data, verify_data );
 }
