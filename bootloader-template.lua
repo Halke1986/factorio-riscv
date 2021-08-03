@@ -290,10 +290,7 @@ function encode_instructions()
 	local page = 0
 	local word = 0
 
-	local cc = game.player.surface.create_entity({
-	    name = "constant-combinator",
-	    position = {x=start.position.x + 2, y=start.position.y},
-	    force = game.forces.player})
+	local cc = {}
 
 	for n,inst in pairs(byte_code) do
 
