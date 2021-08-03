@@ -7,8 +7,6 @@
 
 // Any specific target init code should be put here.
 #define RVMODEL_BOOT
-    .section .text.init;
-    nop
 //    .section .text.init;
 //    .option push
 //    .option norelax

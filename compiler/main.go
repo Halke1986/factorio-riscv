@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	textSectionName = ".text.init"
+	textSectionName = ".text"
 	dataSectionName = ".data"
 
 	wordSize  = 4
@@ -74,12 +74,14 @@ func compile(rawElf []byte) ([]uint32, error) {
 		return nil, err
 	}
 
-	data, err := handleDataSection(*sections)
-	if err != nil {
-		return nil, err
-	}
+	return text, nil
 
-	return append(text, data...), nil
+	//data, err := handleDataSection(*sections)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	//return append(text, data...), nil
 }
 
 // readSections reads selected elf file sections.
