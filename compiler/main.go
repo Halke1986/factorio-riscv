@@ -156,6 +156,8 @@ func handleTextSection(sections elfSections) ([]uint32, error) {
 			return nil, err
 		}
 
+		//fmt.Printf("%x %s\n", 0x4000000+i*4, inst.Name)
+
 		usedInstructions[inst.Name]++
 	}
 

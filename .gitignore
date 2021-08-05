@@ -6,6 +6,7 @@ elf
 bytecode
 bootloader.lua
 out
+out.asm
 
 # binaries
 compiler/compiler
