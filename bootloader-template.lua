@@ -294,27 +294,34 @@ function encode_instructions()
 
 	for n,inst in pairs(byte_code) do
 
+	    if word == 0 then
+	        cc = game.player.surface.create_entity({
+                name = "constant-combinator",
+                position = {x=start.position.x + 2, y=start.position.y + page},
+                direction = 6,
+                force = game.forces.player})
+
+            cc.get_control_behavior().set_signal(1, {signal={type="virtual", name="signal-info"}, count=2080373760 - page * 1024})
+        end
+
 		if word % 20 == 0 then
 		    cc = game.player.surface.create_entity({
                 name = "constant-combinator",
-                position = {x=start.position.x + 2 + word / 20, y=start.position.y + page},
+                position = {x=start.position.x + 3 + word / 20, y=start.position.y + page},
                 force = game.forces.player})
-		elseif word == 256 then
-		    page = page + 1
-		    word = 0
-            cc = game.player.surface.create_entity({
-                name = "constant-combinator",
-                position = {x=start.position.x + 2, y=start.position.y + page},
-                force = game.forces.player})
-		end
+        end
 
         if inst ~= "0" then
-		    cc.get_control_behavior().set_signal(word % 20 + 1, {signal=signal_table[word + 1], count=overflow(tonumber(inst,16))})
-		end
+        		    cc.get_control_behavior().set_signal(word % 20 + 1, {signal=signal_table[word + 1], count=overflow(tonumber(inst,16))})
+        		end
 
-		word = word + 1
+        word = word + 1
+
+		if word == 256 then
+		    page = page + 1
+		    word = 0
+        end
 	end
-
 end
 
 encode_instructions()
