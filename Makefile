@@ -12,4 +12,4 @@ disassembly: # print disassembly of elf file
 
 compliance-test: src_dir = programs/compliance-tests
 compliance-test: # compile the selected compliance test
-	riscv64-unknown-elf-g++ -g $(src_dir)/src/jalr-01.S -o elf -ffreestanding -nostdlib -march=rv32i -mabi=ilp32 -I $(src_dir)/env -T $(src_dir)/env/script.ld
+	riscv64-unknown-elf-g++ -g $(src_dir)/src/and-01.S -o elf -ffreestanding -nostdlib -march=rv32i -mabi=ilp32 -I $(src_dir)/env -T $(src_dir)/env/script.ld

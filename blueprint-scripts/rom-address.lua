@@ -5,7 +5,7 @@ function generate_rom_address_offset()
 
 	local cc = {}
 
-	for i=1,1710,1 do
+	for i=1,223,1 do
 
         cc = game.player.surface.create_entity({
             name = "constant-combinator",
