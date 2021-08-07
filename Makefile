@@ -25,11 +25,13 @@ bench-qsort:
     -I$(src_dir)/qsort\
     -o elf\
     $(src_dir)/qsort/qsort_main.c\
+    $(src_dir)/common/crt.S\
     -lgcc\
     -nostdlib\
     -ffreestanding\
     -march=rv32i\
     -mabi=ilp32\
+    -O2\
     -T$(src_dir)/env/link.ld
 
 bench-qsort-host: src_dir = programs/benchmarks

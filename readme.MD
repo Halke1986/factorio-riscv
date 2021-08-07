@@ -3,7 +3,7 @@
 - Code needs to be start at address `0x0`. First operation needs to be a `nop`, as the Factorio treatment of zero-valued
   signal makes it difficult to distinguish between no activity and executing `0x0`.
 
-## ROM Memory
+## Program ROM Memory
 
 * Executable code is stored in ROM memory, starting at address `0x4000000`. Program execution starts at `0x4000000`.
 
@@ -38,3 +38,9 @@ Blue Input:
 Yellow Output:
 
 * `Dot` - Read value.
+
+## Hardcoded ROM Memory
+
+* Hardcoded, CPU implementation-specific data can be read from specific addresses with `LW` instruction. Addressing
+  space and addressing schema is shared with RAM memory.
+    * `0x20000000` - RAM memory size in bytes.
