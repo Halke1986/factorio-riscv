@@ -37,8 +37,6 @@
 #define SWAP(a,b) do { typeof(a) temp=(a);(a)=(b);(b)=temp; } while (0)
 #define SWAP_IF_GREATER(a, b) do { if ((a) > (b)) SWAP(a, b); } while (0)
 
-
-
 //--------------------------------------------------------------------------
 // Quicksort function
 
@@ -141,11 +139,5 @@ int main( int argc, char* argv[] )
 {
 
   sort( DATA_SIZE, input_data );
-
-//   for (int i = 0; i < DATA_SIZE; i++){
-//          printf("%d\n", input_data[i]);
-//      }
-
-
   return 0;
 }

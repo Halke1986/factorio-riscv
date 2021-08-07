@@ -14,3 +14,5 @@ _start:
   .option pop
 
   call main
+  li ra, 0x0
+  ret
