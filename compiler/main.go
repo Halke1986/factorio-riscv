@@ -98,6 +98,11 @@ func readSections(elf elf_reader.ELFFile) (map[string]elfSection, error) {
 			return nil, err
 		}
 
+		// .bss should not contain any data in the elf file.
+		if name == ".bss" {
+			continue
+		}
+
 		header, err := elf.GetSectionHeader(i)
 		if err != nil {
 			return nil, err
@@ -151,6 +156,7 @@ func handleTextSection(sections map[string]elfSection) ([]uint32, error) {
 	}
 
 	usedInstructions := map[string]int{}
+	unimplementedInstructions := map[string]int{}
 
 	for _, w := range words {
 		// Null instruction is used for padding.
@@ -166,9 +172,13 @@ func handleTextSection(sections map[string]elfSection) ([]uint32, error) {
 		//fmt.Printf("%x %s\n", 0x4000000+i*4, inst.Name)
 
 		usedInstructions[inst.Name]++
+
+		if !inst.Implemented {
+			unimplementedInstructions[inst.Name] ++
+		}
 	}
 
-	for k, v := range usedInstructions {
+	for k, v := range unimplementedInstructions {
 		fmt.Println(k, v)
 	}
 

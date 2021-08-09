@@ -37,42 +37,42 @@ var InstructionTable = []InstructionType{
 		Mask:        BTypeOpcodeMask,
 		Opcode:      0b1100011,
 		Funct3:      0b0,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "BNE",
 		Mask:        BTypeOpcodeMask,
 		Opcode:      0b1100011,
 		Funct3:      0b1,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "BLT",
 		Mask:        BTypeOpcodeMask,
 		Opcode:      0b1100011,
 		Funct3:      0b100,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "BGE",
 		Mask:        BTypeOpcodeMask,
 		Opcode:      0b1100011,
 		Funct3:      0b101,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "BLTU",
 		Mask:        BTypeOpcodeMask,
 		Opcode:      0b1100011,
 		Funct3:      0b110,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "BGEU",
 		Mask:        BTypeOpcodeMask,
 		Opcode:      0b1100011,
 		Funct3:      0b111,
-		Implemented: false,
+		Implemented: true,
 	},
 
 	// I-type instructions
@@ -144,7 +144,7 @@ var InstructionTable = []InstructionType{
 		Mask:        ITypeOpcodeMask,
 		Opcode:      0b10011,
 		Funct3:      0b100,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "ORI",
@@ -158,7 +158,7 @@ var InstructionTable = []InstructionType{
 		Mask:        ITypeOpcodeMask,
 		Opcode:      0b10011,
 		Funct3:      0b111,
-		Implemented: false,
+		Implemented: true,
 	},
 
 	// J-type instructions
@@ -200,7 +200,7 @@ var InstructionTable = []InstructionType{
 		Opcode:      0b110011,
 		Funct3:      0b0,
 		Funct7:      0b0,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "SUB",
@@ -208,7 +208,7 @@ var InstructionTable = []InstructionType{
 		Opcode:      0b110011,
 		Funct3:      0b0,
 		Funct7:      0b100000,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "SLL",
@@ -272,7 +272,7 @@ var InstructionTable = []InstructionType{
 		Opcode:      0b110011,
 		Funct3:      0b111,
 		Funct7:      0b0,
-		Implemented: false,
+		Implemented: true,
 	},
 
 	// S-type instructions
@@ -303,13 +303,13 @@ var InstructionTable = []InstructionType{
 		Name:        "LUI",
 		Mask:        UTypeOpcodeMask,
 		Opcode:      0b110111,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "AUIPC",
 		Mask:        UTypeOpcodeMask,
 		Opcode:      0b10111,
-		Implemented: false,
+		Implemented: true,
 	},
 
 	// SYSTEM instructions
