@@ -18,6 +18,7 @@ const (
 	frameSize = wordSize * 256
 
 	codeAddress = 0x4000000
+	dataAddress = 0x0000000
 )
 
 type elfSection struct {
@@ -26,8 +27,8 @@ type elfSection struct {
 }
 
 func main() {
-	if len(os.Args) < 3 {
-		fmt.Println("Usage: compiler elf-input-path bytecode-output-path")
+	if len(os.Args) < 4 {
+		fmt.Println("Usage: compiler elf-input-path text-output-path data-output-path")
 		return
 	}
 
@@ -36,50 +37,43 @@ func main() {
 		log.Fatal(err)
 	}
 
-	words, err := compile(rawElf)
+	text, data, err := compile(rawElf)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	output, err := os.Create(os.Args[2])
-	defer func() { _ = output.Close() }()
-	if err != nil {
+	if err := outputWords(text, os.Args[2]); err != nil {
 		log.Fatal(err)
 	}
 
-	for _, w := range words {
-		_, err := fmt.Fprintf(output, "\"%x\",", w)
-		if err != nil {
-			log.Fatal(err)
-		}
+	if err := outputWords(data, os.Args[3]); err != nil {
+		log.Fatal(err)
 	}
 }
 
 // compile elf file to bytecode.
-func compile(rawElf []byte) ([]uint32, error) {
+func compile(rawElf []byte) ([]uint32, []uint32, error) {
 	elf, err := elf_reader.ParseELFFile(rawElf)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	sections, err := readSections(elf)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	text, err := handleTextSection(sections)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return text, nil
+	data, err := handleDataSection(sections)
+	if err != nil {
+		return nil, nil, err
+	}
 
-	//data, err := handleDataSection(*sections)
-	//if err != nil {
-	//	return nil, err
-	//}
-
-	//return append(text, data...), nil
+	return text, data, nil
 }
 
 // readSections reads selected elf file sections.
@@ -174,7 +168,7 @@ func handleTextSection(sections map[string]elfSection) ([]uint32, error) {
 		usedInstructions[inst.Name]++
 
 		if !inst.Implemented {
-			unimplementedInstructions[inst.Name] ++
+			unimplementedInstructions[inst.Name]++
 		}
 	}
 
@@ -185,25 +179,27 @@ func handleTextSection(sections map[string]elfSection) ([]uint32, error) {
 	return words, nil
 }
 
-//
-//// handleDataSection reads elf data and adds padding between text and data.
-//func handleDataSection(sections elfSections) ([]uint32, error) {
-//	textEnd := sections.text.header.GetVirtualAddress() + sections.text.header.GetSize()
-//	padding := (sections.data.header.GetVirtualAddress() - textEnd) / wordSize
-//
-//	fmt.Printf("padding before data: %d\n", padding)
-//
-//	if padding < 0 {
-//		return nil, fmt.Errorf("sections overlap")
-//	}
-//
-//	words, err := parseSection(sections.data, dataSectionName)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	return append(make([]uint32, padding), words...), nil
-//}
+// handleDataSection reads elf data section.
+func handleDataSection(sections map[string]elfSection) ([]uint32, error) {
+	words := []uint32(nil)
+
+	data, dataFound := sections[dataSectionName]
+
+	if dataFound {
+		if data.header.GetVirtualAddress() != dataAddress {
+			fmt.Printf("data starting at address %x\n", dataAddress)
+		}
+
+		initWords, err := parseSection(data, initSectionName)
+		if err != nil {
+			return nil, err
+		}
+
+		words = initWords
+	}
+
+	return words, nil
+}
 
 // parseSection reads elfSection contents as slice of 32-bit words.
 func parseSection(section elfSection, sectionName string) ([]uint32, error) {
@@ -211,7 +207,7 @@ func parseSection(section elfSection, sectionName string) ([]uint32, error) {
 		return nil, fmt.Errorf("%s section not multiple of %d bytes\n", sectionName, wordSize)
 	}
 
-	fmt.Println(section.header.String())
+	//fmt.Println(section.header.String())
 
 	words := make([]uint32, len(section.bytes)/wordSize)
 	for i := 0; i < len(words); i++ {
@@ -224,4 +220,21 @@ func parseSection(section elfSection, sectionName string) ([]uint32, error) {
 	}
 
 	return words, nil
+}
+
+func outputWords(words []uint32, fileName string) error {
+	output, err := os.Create(fileName)
+	defer func() { _ = output.Close() }()
+	if err != nil {
+		return err
+	}
+
+	for _, w := range words {
+		_, err := fmt.Fprintf(output, "\"%x\",", w)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

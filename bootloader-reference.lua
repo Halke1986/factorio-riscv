@@ -1,13 +1,8 @@
 /c local map={}
 
-local text = {
-
+local byte_code = {
+"dead0000","dead0000","deadffff","dead0001","dead0000","deadffff","fff7beef","0400beef","ffffbeef","0200beef","dead0000","dead0002","dead0004","dead0008","dead0010","dead0020","dead0040","dead0080","dead0100","dead0800","dead1000","dead2000","dead4000","dead0000","dead0000","dead0000","dead0000","dead0000","dead0000","dead0000","dead0000","dead0000","dead0000","dead0000","dead0000","dead0000","dead0000","dead0000","dead0000","deadffff","deadffff","deadffff","deadffff","deadffff","deadffff","deadffff","deadffff","deadffff","deadffff","deadffff","deadffff","dead5555","deadaaaa","deadfffe","deadfffd","deadfffb","deadffef","deadffdf","deadffbf","deadff7f","deadfeff","deadfdff","deadfbff","deadf7ff","deadefff","deaddfff","deadbfff","dead7fff","deadffff","deadffff","dead8000","00000000",
 }
-
-local data = {
-
-}
-
 
 local signal_table = {
 	{type="item", name="wooden-chest"},
@@ -287,7 +282,7 @@ function overflow(value)
 	return value
 end
 
-function encode_words(words, add_address, x_offset)
+function encode_instructions()
 	local signal_num = array_len(signal_table)
 
 	local start = game.player.selected
@@ -297,22 +292,12 @@ function encode_words(words, add_address, x_offset)
 
 	local cc = {}
 
-	for n,inst in pairs(words) do
-
-	    if word == 0 and add_address == true then
-	        cc = game.player.surface.create_entity({
-                name = "constant-combinator",
-                position = {x=start.position.x + x_offset, y=start.position.y + page},
-                direction = 6,
-                force = game.forces.player})
-
-            cc.get_control_behavior().set_signal(1, {signal={type="virtual", name="signal-info"}, count=2080373760 - page * 1024})
-        end
+	for n,inst in pairs(byte_code) do
 
 		if word % 20 == 0 then
 		    cc = game.player.surface.create_entity({
                 name = "constant-combinator",
-                position = {x=start.position.x + x_offset + 1 + word / 20, y=start.position.y + page},
+                position = {x=start.position.x + 3 + word / 20, y=start.position.y + page},
                 force = game.forces.player})
         end
 
@@ -329,5 +314,4 @@ function encode_words(words, add_address, x_offset)
 	end
 end
 
-encode_words(text, true, 18)
-encode_words(data, false, 2)
+encode_instructions()

@@ -3,7 +3,8 @@
 
 # Output & temporary files
 elf
-bytecode
+text
+data
 bootloader.lua
 out
 out.asm
