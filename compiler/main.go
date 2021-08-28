@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	initSectionName = ".text.init"
-	textSectionName = ".text"
-	dataSectionName = ".data"
+	initSectionName   = ".text.init"
+	textSectionName   = ".text"
+	rodataSectionName = ".rodata"
+	dataSectionName   = ".data"
 
 	wordSize  = 4
 	frameSize = wordSize * 256
@@ -181,24 +182,25 @@ func handleTextSection(sections map[string]elfSection) ([]uint32, error) {
 
 // handleDataSection reads elf data section.
 func handleDataSection(sections map[string]elfSection) ([]uint32, error) {
-	words := []uint32(nil)
+	// .rodata takes priority.
+	if rodata, rodataFound := sections[rodataSectionName]; rodataFound {
+		if rodata.header.GetVirtualAddress() != dataAddress {
+			fmt.Printf("data starting at address %x\n", dataAddress)
+		}
 
-	data, dataFound := sections[dataSectionName]
+		return parseSection(rodata, initSectionName)
+	}
 
-	if dataFound {
+	// look for .data if .rodata wasn't found.
+	if data, dataFound := sections[dataSectionName]; dataFound {
 		if data.header.GetVirtualAddress() != dataAddress {
 			fmt.Printf("data starting at address %x\n", dataAddress)
 		}
 
-		initWords, err := parseSection(data, initSectionName)
-		if err != nil {
-			return nil, err
-		}
-
-		words = initWords
+		return parseSection(data, initSectionName)
 	}
 
-	return words, nil
+	return nil, nil
 }
 
 // parseSection reads elfSection contents as slice of 32-bit words.

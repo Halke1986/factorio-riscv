@@ -22,13 +22,13 @@ main (int argc __attribute__ ((unused)),
   volatile int result;
   int correct;
 
-  initialise_board ();
-  initialise_benchmark ();
-  warm_caches (WARMUP_HEAT);
+  initialise_board (); // nop
+  initialise_benchmark (); // nop
+  warm_caches (WARMUP_HEAT); // nop
 
-  start_trigger ();
+  start_trigger (); // nop
   result = benchmark ();
-  stop_trigger ();
+  stop_trigger (); // nop
 
   /* bmarks that use arrays will check a global array rather than int result */
 

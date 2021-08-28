@@ -137,7 +137,7 @@ var InstructionTable = []InstructionType{
 		Mask:        ITypeOpcodeMask,
 		Opcode:      0b10011,
 		Funct3:      0b11,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "XORI",
@@ -151,7 +151,7 @@ var InstructionTable = []InstructionType{
 		Mask:        ITypeOpcodeMask,
 		Opcode:      0b10011,
 		Funct3:      0b110,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "ANDI",
@@ -216,7 +216,7 @@ var InstructionTable = []InstructionType{
 		Opcode:      0b110011,
 		Funct3:      0b1,
 		Funct7:      0b0,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "SLT",
@@ -232,7 +232,7 @@ var InstructionTable = []InstructionType{
 		Opcode:      0b110011,
 		Funct3:      0b11,
 		Funct7:      0b0,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "XOR",
@@ -240,7 +240,7 @@ var InstructionTable = []InstructionType{
 		Opcode:      0b110011,
 		Funct3:      0b100,
 		Funct7:      0b0,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "SRL",
@@ -264,7 +264,7 @@ var InstructionTable = []InstructionType{
 		Opcode:      0b110011,
 		Funct3:      0b110,
 		Funct7:      0b0,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "AND",
