@@ -176,7 +176,7 @@ var InstructionTable = []InstructionType{
 		Opcode:      0b10011,
 		Funct3:      0b1,
 		Funct7:      0b0,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "SRLI",
@@ -184,7 +184,7 @@ var InstructionTable = []InstructionType{
 		Opcode:      0b10011,
 		Funct3:      0b101,
 		Funct7:      0b0,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "SRAI",
@@ -192,7 +192,7 @@ var InstructionTable = []InstructionType{
 		Opcode:      0b10011,
 		Funct3:      0b101,
 		Funct7:      0b100000,
-		Implemented: false,
+		Implemented: true,
 	},
 	{
 		Name:        "ADD",
