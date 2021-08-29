@@ -1,10 +1,7 @@
-package main
+package bootloader
 
 import (
 	"fmt"
-	"io/ioutil"
-	"log"
-	"os"
 
 	"github.com/yalue/elf_reader"
 )
@@ -27,33 +24,8 @@ type elfSection struct {
 	bytes  []byte
 }
 
-func main() {
-	if len(os.Args) < 4 {
-		fmt.Println("Usage: compiler elf-input-path text-output-path data-output-path")
-		return
-	}
-
-	rawElf, err := ioutil.ReadFile(os.Args[1])
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	text, data, err := compile(rawElf)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := outputWords(text, os.Args[2]); err != nil {
-		log.Fatal(err)
-	}
-
-	if err := outputWords(data, os.Args[3]); err != nil {
-		log.Fatal(err)
-	}
-}
-
-// compile elf file to bytecode.
-func compile(rawElf []byte) ([]uint32, []uint32, error) {
+// readElf elf file to bytecode.
+func readElf(rawElf []byte) ([]uint32, []uint32, error) {
 	elf, err := elf_reader.ParseELFFile(rawElf)
 	if err != nil {
 		return nil, nil, err
@@ -64,12 +36,12 @@ func compile(rawElf []byte) ([]uint32, []uint32, error) {
 		return nil, nil, err
 	}
 
-	text, err := handleTextSection(sections)
+	text, err := parseTextSection(sections)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	data, err := handleDataSection(sections)
+	data, err := parseDataSection(sections)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -117,8 +89,8 @@ func readSections(elf elf_reader.ELFFile) (map[string]elfSection, error) {
 	return sections, nil
 }
 
-// handleTextSection reads bytecode and asserts instructions.
-func handleTextSection(sections map[string]elfSection) ([]uint32, error) {
+// parseTextSection reads bytecode and asserts instructions.
+func parseTextSection(sections map[string]elfSection) ([]uint32, error) {
 	words := []uint32(nil)
 
 	init, initFound := sections[initSectionName]
@@ -164,12 +136,12 @@ func handleTextSection(sections map[string]elfSection) ([]uint32, error) {
 			return nil, err
 		}
 
-		//fmt.Printf("%x %s\n", 0x4000000+i*4, inst.Name)
+		//fmt.Printf("%x %s\n", 0x4000000+i*4, inst.name)
 
-		usedInstructions[inst.Name]++
+		usedInstructions[inst.name]++
 
-		if !inst.Implemented {
-			unimplementedInstructions[inst.Name]++
+		if !inst.implemented {
+			unimplementedInstructions[inst.name]++
 		}
 	}
 
@@ -180,8 +152,8 @@ func handleTextSection(sections map[string]elfSection) ([]uint32, error) {
 	return words, nil
 }
 
-// handleDataSection reads elf data section.
-func handleDataSection(sections map[string]elfSection) ([]uint32, error) {
+// parseDataSection reads elf data section.
+func parseDataSection(sections map[string]elfSection) ([]uint32, error) {
 	// .rodata takes priority.
 	if rodata, rodataFound := sections[rodataSectionName]; rodataFound {
 		if rodata.header.GetVirtualAddress() != dataAddress {
@@ -222,21 +194,4 @@ func parseSection(section elfSection, sectionName string) ([]uint32, error) {
 	}
 
 	return words, nil
-}
-
-func outputWords(words []uint32, fileName string) error {
-	output, err := os.Create(fileName)
-	defer func() { _ = output.Close() }()
-	if err != nil {
-		return err
-	}
-
-	for _, w := range words {
-		_, err := fmt.Fprintf(output, "\"%x\",", w)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
 }

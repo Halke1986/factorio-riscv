@@ -1,7 +1,11 @@
 /c local map={}
 
-local byte_code = {
-"ff800000","02000000","ffffffff","33333333","00000000","00000000","00001fff","00000000","00000000","00000004","00000000","00000010","00000004","00000000","00000000","00000010","00000000","00000000","00000000","00000400","00000000","00000010","00000000","00000001","00020000","00000400","00000800","00000000","00000400","00000000","00000000","00002000","00004000","00800000","00020000","00080000","00008000","ffffffff","ffffffff","ffffffff","ffffffff","ffffffff","ffffffff","ffffffff","ffffffff","ffffffff","fffffeff","ffffffff","ffffffff","ffffffdf","fffffffe","fffffff7","ffffffff","ffffff7f","ffffff7f","fff7ffff","ffffffef","ffffefff","ffffffff","ffff7fff","fffdffff","feffffff","ffbfffff","fdffffff","000aaaaa","fffff555","00000000","00000000","00000ccc","ffffa57e","000000b5","00000000","00000002","00055555","fffffff7","00666666","fff7ffff","33333332","000000cc","00000000","02aaaaaa","d5555555","ffffffef","66666667","fffffffa","00000080","fffff7ff","00000000","00000000","00004000","00000000","00000000",
+local text = {
+#TEXT#
+}
+
+local data = {
+#DATA#
 }
 
 local signal_table = {
@@ -282,7 +286,7 @@ function overflow(value)
 	return value
 end
 
-function encode_instructions()
+function encode_words(words, add_address, x_offset)
 	local signal_num = array_len(signal_table)
 
 	local start = game.player.selected
@@ -292,12 +296,22 @@ function encode_instructions()
 
 	local cc = {}
 
-	for n,inst in pairs(byte_code) do
+	for n,inst in pairs(words) do
+
+	    if word == 0 and add_address == true then
+	        cc = game.player.surface.create_entity({
+                name = "constant-combinator",
+                position = {x=start.position.x + x_offset, y=start.position.y + page},
+                direction = 6,
+                force = game.forces.player})
+
+            cc.get_control_behavior().set_signal(1, {signal={type="virtual", name="signal-info"}, count=2080373760 - page * 1024})
+        end
 
 		if word % 20 == 0 then
 		    cc = game.player.surface.create_entity({
                 name = "constant-combinator",
-                position = {x=start.position.x + 3 + word / 20, y=start.position.y + page},
+                position = {x=start.position.x + x_offset + 1 + word / 20, y=start.position.y + page},
                 force = game.forces.player})
         end
 
@@ -314,4 +328,5 @@ function encode_instructions()
 	end
 end
 
-encode_instructions()
+encode_words(text, true, 18)
+encode_words(data, false, 2)
