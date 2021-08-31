@@ -1,11 +1,9 @@
-#define RAM_SIZE 0x8000 # All CPU implementations should have at least 32 frames of RAM memory.
-
   .section ".text.init"
   .option push
   .option norelax
   .globl _start
 _start:
-     li sp,RAM_SIZE
+     li sp,0x8000 # All CPU implementations should have at least 32 frames of RAM memory.
   .option pop
 
   call main
