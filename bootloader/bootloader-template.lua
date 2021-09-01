@@ -316,8 +316,8 @@ function encode_words(words, add_address, x_offset)
         end
 
         if inst ~= "0" then
-        		    cc.get_control_behavior().set_signal(word % 20 + 1, {signal=signal_table[word + 1], count=overflow(tonumber(inst,16))})
-        		end
+            cc.get_control_behavior().set_signal(word % 20 + 1, {signal=signal_table[word + 1], count=overflow(tonumber(inst,16))})
+        end
 
         word = word + 1
 
@@ -328,5 +328,5 @@ function encode_words(words, add_address, x_offset)
 	end
 end
 
-encode_words(text, true, 18)
+encode_words(text, false, 17)
 encode_words(data, false, 2)

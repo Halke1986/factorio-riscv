@@ -130,7 +130,7 @@ var instructionTable = []instructionType{
 		mask:        iTypeOpcodeMask,
 		opcode:      0b10011,
 		funct3:      0b10,
-		implemented: false,
+		implemented: true,
 	},
 	{
 		name:        "SLTIU",
@@ -224,7 +224,7 @@ var instructionTable = []instructionType{
 		opcode:      0b110011,
 		funct3:      0b10,
 		funct7:      0b0,
-		implemented: false,
+		implemented: true,
 	},
 	{
 		name:        "SLTU",
@@ -248,7 +248,7 @@ var instructionTable = []instructionType{
 		opcode:      0b110011,
 		funct3:      0b101,
 		funct7:      0b0,
-		implemented: false,
+		implemented: true,
 	},
 	{
 		name:        "SRA",
@@ -256,7 +256,7 @@ var instructionTable = []instructionType{
 		opcode:      0b110011,
 		funct3:      0b101,
 		funct7:      0b100000,
-		implemented: false,
+		implemented: true,
 	},
 	{
 		name:        "OR",
