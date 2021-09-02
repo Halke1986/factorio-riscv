@@ -9,6 +9,7 @@ SECTIONS
     .text : { *(.text*) } > rom
     .srodata : { *(.srodata*) } > ram
     .rodata : { *(.rodata*) } > ram
+    .sdata : { *(.sdata*) } > ram
     .data : { *(.data*) } > ram
     .bss : { *(.bss*) } > ram
 }

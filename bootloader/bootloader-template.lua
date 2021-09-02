@@ -301,7 +301,7 @@ function encode_words(words, add_address, x_offset)
 	    if word == 0 and add_address == true then
 	        cc = game.player.surface.create_entity({
                 name = "constant-combinator",
-                position = {x=start.position.x + x_offset, y=start.position.y + page},
+                position = {x=start.position.x + x_offset + 14, y=start.position.y + page},
                 direction = 6,
                 force = game.forces.player})
 
@@ -328,5 +328,5 @@ function encode_words(words, add_address, x_offset)
 	end
 end
 
-encode_words(text, false, 17)
+encode_words(text, true, 17)
 encode_words(data, false, 2)

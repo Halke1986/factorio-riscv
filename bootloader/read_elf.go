@@ -12,6 +12,7 @@ const (
 
 	srodataSectionName = ".srodata"
 	rodataSectionName  = ".rodata"
+	sdataSectionName   = ".sodata"
 	dataSectionName    = ".data"
 
 	wordSize = 4
@@ -21,6 +22,7 @@ const (
 )
 
 type elfSection struct {
+	name   string
 	header elf_reader.ELFSectionHeader
 	bytes  []byte
 }
@@ -37,7 +39,7 @@ func readElf(rawElf []byte) ([]uint32, []uint32, error) {
 		return nil, nil, err
 	}
 
-	text, err := parseTextSection(sections)
+	text, err := parseTextSections(sections)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -84,6 +86,7 @@ func readSections(elf elf_reader.ELFFile) (map[string]elfSection, error) {
 		}
 
 		sections[name] = elfSection{
+			name:   name,
 			header: header,
 			bytes:  bytes,
 		}
@@ -92,8 +95,8 @@ func readSections(elf elf_reader.ELFFile) (map[string]elfSection, error) {
 	return sections, nil
 }
 
-// parseTextSection reads bytecode and asserts instructions.
-func parseTextSection(sections map[string]elfSection) ([]uint32, error) {
+// parseTextSections reads bytecode and asserts instructions.
+func parseTextSections(sections map[string]elfSection) ([]uint32, error) {
 	words := []uint32(nil)
 
 	init, initFound := sections[initSectionName]
@@ -104,7 +107,7 @@ func parseTextSection(sections map[string]elfSection) ([]uint32, error) {
 			fmt.Printf("bytecode not starting at address %x\n", codeAddress)
 		}
 
-		initWords, err := parseSection(init, initSectionName)
+		initWords, err := parseSection(init)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +120,7 @@ func parseTextSection(sections map[string]elfSection) ([]uint32, error) {
 			fmt.Printf("bytecode not starting at address %x\n", codeAddress)
 		}
 
-		textWords, err := parseSection(text, textSectionName)
+		textWords, err := parseSection(text)
 		if err != nil {
 			return nil, err
 		}
@@ -156,65 +159,68 @@ func parseTextSection(sections map[string]elfSection) ([]uint32, error) {
 }
 
 // parseDataSections reads elf data section.
-func parseDataSections(sections map[string]elfSection) ([]uint32, error) {
-	dataSections := []string{
+func parseDataSections(allSections map[string]elfSection) ([]uint32, error) {
+	sectionNames := []string{
 		srodataSectionName,
 		rodataSectionName,
+		sdataSectionName,
 		dataSectionName,
 	}
 
-	data := []uint32(nil)
-	sectionNum := 0
-
-	for _, sectionName := range dataSections {
-		if section, found := sections[sectionName]; found {
-			sectionNum++
-			if section.header.GetVirtualAddress() != dataAddress {
-				fmt.Printf("%s starting at address %x\n", sectionName, dataAddress)
-			}
-
-			sectionData, err := parseSection(section, initSectionName)
-			if err != nil {
-				return nil, err
-			}
-
-			data = sectionData
+	// Find all data sections.
+	dataSections := []elfSection(nil)
+	for _, sectionName := range sectionNames {
+		if section, found := allSections[sectionName]; found {
+			dataSections = append(dataSections, section)
 		}
 	}
 
-	if sectionNum > 1 {
-		return nil, fmt.Errorf("multiple data sections found")
+	if len(dataSections) == 0 {
+		return nil, nil
+	}
+
+	// Check if sections are in correct order and don't overlap.
+	for i := 0; i < len(dataSections)-1; i++ {
+		h1 := dataSections[i].header
+		h2 := dataSections[i+1].header
+		if h1.GetVirtualAddress() > h2.GetVirtualAddress() {
+			return nil, fmt.Errorf("data sections in incorrect order")
+		}
+
+		if h1.GetVirtualAddress()+h1.GetSize() > h2.GetVirtualAddress() {
+			return nil, fmt.Errorf("data sections %s and %s overlap",
+				dataSections[i].name, dataSections[i+1].name)
+		}
+	}
+
+	if dataSections[0].header.GetVirtualAddress() != dataAddress {
+		return nil, fmt.Errorf("data section not starting at address %x\n", dataAddress)
+	}
+
+	lastSection := dataSections[len(dataSections)-1]
+	dataLen := lastSection.header.GetVirtualAddress() + lastSection.header.GetSize()
+
+	// Append data from all data sections.
+	data := make([]uint32, dataLen/wordSize)
+	for _, section := range dataSections {
+		sectionData, err := parseSection(section)
+		if err != nil {
+			return nil, err
+		}
+
+		start := section.header.GetVirtualAddress() / wordSize
+		for i := uint64(0); i < uint64(len(sectionData)); i++ {
+			data[start+i] = sectionData[i]
+		}
 	}
 
 	return data, nil
 }
 
-func parseDataSection(sections map[string]elfSection) ([]uint32, error) {
-	// .rodata takes priority.
-	if rodata, rodataFound := sections[rodataSectionName]; rodataFound {
-		if rodata.header.GetVirtualAddress() != dataAddress {
-			fmt.Printf("data starting at address %x\n", dataAddress)
-		}
-
-		return parseSection(rodata, initSectionName)
-	}
-
-	// look for .data if .rodata wasn't found.
-	if data, dataFound := sections[dataSectionName]; dataFound {
-		if data.header.GetVirtualAddress() != dataAddress {
-			fmt.Printf("data starting at address %x\n", dataAddress)
-		}
-
-		return parseSection(data, initSectionName)
-	}
-
-	return nil, nil
-}
-
 // parseSection reads elfSection contents as slice of 32-bit words.
-func parseSection(section elfSection, sectionName string) ([]uint32, error) {
+func parseSection(section elfSection) ([]uint32, error) {
 	if section.header.GetSize()%wordSize != 0 {
-		return nil, fmt.Errorf("%s section not multiple of %d bytes\n", sectionName, wordSize)
+		return nil, fmt.Errorf("%s section not multiple of %d bytes\n", section.name, wordSize)
 	}
 
 	//fmt.Println(section.header.String())
