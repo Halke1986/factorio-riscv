@@ -7,6 +7,7 @@ SECTIONS
 {
     .text.init : { *(.text.init*) } > rom
     .text : { *(.text*) } > rom
+    .srodata : { *(.srodata*) } > ram
     .rodata : { *(.rodata*) } > ram
     .data : { *(.data*) } > ram
     .bss : { *(.bss*) } > ram

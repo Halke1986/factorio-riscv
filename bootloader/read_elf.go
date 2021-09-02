@@ -7,13 +7,14 @@ import (
 )
 
 const (
-	initSectionName   = ".text.init"
-	textSectionName   = ".text"
-	rodataSectionName = ".rodata"
-	dataSectionName   = ".data"
+	initSectionName = ".text.init"
+	textSectionName = ".text"
 
-	wordSize  = 4
-	frameSize = wordSize * 256
+	srodataSectionName = ".srodata"
+	rodataSectionName  = ".rodata"
+	dataSectionName    = ".data"
+
+	wordSize = 4
 
 	codeAddress = 0x4000000
 	dataAddress = 0x0000000
@@ -41,7 +42,7 @@ func readElf(rawElf []byte) ([]uint32, []uint32, error) {
 		return nil, nil, err
 	}
 
-	data, err := parseDataSection(sections)
+	data, err := parseDataSections(sections)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -74,6 +75,8 @@ func readSections(elf elf_reader.ELFFile) (map[string]elfSection, error) {
 		if err != nil {
 			return nil, err
 		}
+
+		//fmt.Println(name, header.String())
 
 		bytes, err := elf.GetSectionContent(i)
 		if err != nil {
@@ -152,7 +155,40 @@ func parseTextSection(sections map[string]elfSection) ([]uint32, error) {
 	return words, nil
 }
 
-// parseDataSection reads elf data section.
+// parseDataSections reads elf data section.
+func parseDataSections(sections map[string]elfSection) ([]uint32, error) {
+	dataSections := []string{
+		srodataSectionName,
+		rodataSectionName,
+		dataSectionName,
+	}
+
+	data := []uint32(nil)
+	sectionNum := 0
+
+	for _, sectionName := range dataSections {
+		if section, found := sections[sectionName]; found {
+			sectionNum++
+			if section.header.GetVirtualAddress() != dataAddress {
+				fmt.Printf("%s starting at address %x\n", sectionName, dataAddress)
+			}
+
+			sectionData, err := parseSection(section, initSectionName)
+			if err != nil {
+				return nil, err
+			}
+
+			data = sectionData
+		}
+	}
+
+	if sectionNum > 1 {
+		return nil, fmt.Errorf("multiple data sections found")
+	}
+
+	return data, nil
+}
+
 func parseDataSection(sections map[string]elfSection) ([]uint32, error) {
 	// .rodata takes priority.
 	if rodata, rodataFound := sections[rodataSectionName]; rodataFound {
