@@ -91,22 +91,18 @@ func link(objects []string) error {
 			"WORK_DIR": workDir,
 		},
 		"riscv64-unknown-elf-gcc",
-		appendAll(
-			[]string{
-				"-ffreestanding",
-				"-nostartfiles",
-				"-march=rv32i",
-				"-mabi=ilp32",
-				"-O2",
-				"-Xlinker",
-				"-T${WORK_DIR}/board/link.ld",
-			},
+		appendStrings(
+			"-ffreestanding",
+			"-nostartfiles",
+			"-march=rv32i",
+			"-mabi=ilp32",
+			"-O2",
+			"-Xlinker",
+			"-T${WORK_DIR}/board/link.ld",
 			objects,
-			[]string{
-				"-lgcc",
-				"-lm",
-				"-oelf",
-			},
+			"-lgcc",
+			"-lm",
+			"-oelf",
 		)...,
 	)
 }
@@ -118,11 +114,16 @@ func makeObjPath(sourcePath string) string {
 	return "${WORK_DIR}/build/" + fileName + ".o"
 }
 
-func appendAll(ss ...[]string) []string {
-	all := []string(nil)
+func appendStrings(ss ...interface{}) []string {
+	result := []string(nil)
 	for i := range ss {
-		all = append(all, ss[i]...)
+		switch v := ss[i].(type) {
+		case string:
+			result = append(result, v)
+		case []string:
+			result = append(result, v...)
+		}
 	}
 
-	return all
+	return result
 }
