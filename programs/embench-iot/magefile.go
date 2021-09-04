@@ -24,7 +24,7 @@ func Build(suite string) error {
 		"${WORK_DIR}/support/beebsc.c",
 		"${WORK_DIR}/support/main.c",
 		"${WORK_DIR}/support/board.c",
-		"${WORK_DIR}/board/crt.S",
+		"${WORK_DIR}/env/crt.S",
 	}...)
 
 	// Compile or assemble all required sources.
@@ -98,7 +98,7 @@ func link(objects []string) error {
 			"-mabi=ilp32",
 			"-O2",
 			"-Xlinker",
-			"-T${WORK_DIR}/board/link.ld",
+			"-T${WORK_DIR}/env/link.ld",
 			objects,
 			"-lgcc",
 			"-lm",

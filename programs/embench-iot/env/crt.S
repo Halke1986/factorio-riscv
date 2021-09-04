@@ -7,5 +7,5 @@ _start:
   .option pop
 
   call main
-  li ra, 0x0
-  ret
+  li ra, 0x8000000 # jump past the program ROM to signify execution end
+  jr ra
