@@ -10,7 +10,7 @@ import (
 
 const workDir = "./programs/embench-iot"
 
-// Build build selected benchmark
+// Build selected benchmark
 func Build(suite string) error {
 	// List all suite sources.
 	srcDir := fmt.Sprintf("%s/src/%s/", workDir, suite)
@@ -20,12 +20,12 @@ func Build(suite string) error {
 	}
 
 	// List all required support sources.
-	sources = append(sources, []string{
+	sources = appendStrings(sources,
 		"${WORK_DIR}/support/beebsc.c",
 		"${WORK_DIR}/support/main.c",
 		"${WORK_DIR}/support/board.c",
 		"${WORK_DIR}/env/crt.S",
-	}...)
+	)
 
 	// Compile or assemble all required sources.
 	objects := []string(nil)
@@ -114,6 +114,7 @@ func makeObjPath(sourcePath string) string {
 	return "${WORK_DIR}/build/" + fileName + ".o"
 }
 
+// appendStrings appends strings and string slices into one slice.
 func appendStrings(ss ...interface{}) []string {
 	result := []string(nil)
 	for i := range ss {
