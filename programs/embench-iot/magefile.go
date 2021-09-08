@@ -3,15 +3,29 @@ package embench
 import (
 	"fmt"
 	"path/filepath"
+	"riscv/bootloader"
 	"strings"
 
 	"github.com/magefile/mage/sh"
 )
 
-const workDir = "./programs/embench-iot"
+const (
+	workDir = "./programs/embench-iot"
 
-// Build selected benchmark
+	elfPath        = "elf"
+	bootloaderPath = "bootloader.lua"
+)
+
+// Build build selected benchmark
 func Build(suite string) error {
+	if err := build(suite); err != nil {
+		return err
+	}
+
+	return bootloader.Make(elfPath, bootloaderPath)
+}
+
+func build(suite string) error {
 	// List all suite sources.
 	srcDir := fmt.Sprintf("%s/src/%s/", workDir, suite)
 	sources, err := filepath.Glob(srcDir + "*.c")
@@ -102,7 +116,7 @@ func link(objects []string) error {
 			objects,
 			"-lgcc",
 			"-lm",
-			"-oelf",
+			"-o", elfPath,
 		)...,
 	)
 }
