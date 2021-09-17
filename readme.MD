@@ -1,28 +1,46 @@
 # Factorio RISC V implementation
 
-## ISA
+![CPU](riscv.png)
+
+## CPU
 
 - The CPU implements `RV32I ISA version 2.1` in accordance with `The RISC-V Instruction Set Manual version 20191213`.
 - Traps and exceptions are not implemented.
 - `FENCE`, `ECALL` and `EBREAK` instructions are not implemented. Calling them results in program abort.
+- There is no input or output. At the current stage of development the CPU is designed to run benchmarks and ISA
+  verification suites.
 
-## Environment
+## Factorio version and mods required
 
-- Code needs to start at address `0x4000000`.
-- After end of execution program needs to jump to address `0x8000000`.
-- Data needs to start at address `0x0`.
-- Both code and data are bootloaded into ROM and RAM respectively with script-generated const combinator ROMs.
+The CPU is being developed in Factorio 1.1.27.
+
+The logic part of the CPU is completely vanilla, but there are some QOL mods used.
+
+- [EditorExtensions](https://mods.factorio.com/mod/EditorExtensions) for simplifying power supply.
+- [Magic Lamp](https://mods.factorio.com/mod/magic-lamp) for displaying values. This mod can is not necessary for the
+  CPU operation.
+- [Pushbutton](https://mods.factorio.com/mod/pushbutton) for `reset` and `run` input.
 
 ## Running a program
 
+The CPU blueprint found in `blueprints/cpu.txt` file is preloaded with `aha-mont64` benchmark
+from [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the cpu, press `RESET` (pushbuttons
+with red lamps) and `RUN` (pushbuttons with green lamps). The program executes 26567 instructions in 67746 ticks.
+
+## Building and running a program from this repository
+
+- Install [GNU toolchain for RISC-V](https://github.com/riscv-collab/riscv-gnu-toolchain)
 - Install [mage](https://github.com/magefile/mage), a make-like tool based on Go.
-- Build a program. E.g. to build one of the embench-iot suites run `mage embench:build huffbench`.
-- Build the bootloader `mage bootloader`.
-- Copy contents of `bootloader.lua` file to Factorio console, place the cursor over a const combinator and run the
+- Build the program. E.g. to build `huffbench`, one of the embench-iot suites, run `mage embench:build huffbench`.
+- Copy contents of `bootloader.lua` file to Factorio console, place the cursor over a constant combinator and run the
   script.
 - Copy the generated ROMs to bootloader section of the CPU.
 - Press `RESET` pushbutton.
 - Press `RUN` pushbutton.
+
+## Building a program from scratch
+
+TODO
 
 ## CPU verification
 
@@ -31,7 +49,7 @@
 - Benchmark suites from [embench-iot](https://github.com/embench/embench-iot) were successfully completed (`md5sum`
   was excluded, as it fails even on desktop environment and contains library calls like `printf` and `calloc`).
 
-## Benchmarks
+## CPU Performance (outdated, current implementation requires ~3 ticks per instruction)
 
 - Benchmark suites from `embench-iot` were modified to run a single iteration to limit the run time.
 
