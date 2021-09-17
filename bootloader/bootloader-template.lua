@@ -317,8 +317,9 @@ function add_row(words, words_len, row_number, start_pos, x_offset, add_metadata
                 return
             end
 
-            if inst ~= "0" then
-                cc.get_control_behavior().set_signal(s, {signal=signal_table[signal_idx], count=overflow(tonumber(words[idx],16))})
+            local inst = tonumber(words[idx],16)
+            if inst ~= 0 then
+                cc.get_control_behavior().set_signal(s, {signal=signal_table[signal_idx], count=overflow(inst)})
             end
 
             words_left = words_left - 1
