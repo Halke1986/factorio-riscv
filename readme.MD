@@ -17,17 +17,22 @@ The CPU is being developed in Factorio 1.1.27.
 The logic part of the CPU is completely vanilla, but there are some QOL mods used.
 
 - [EditorExtensions](https://mods.factorio.com/mod/EditorExtensions) for simplifying power supply.
-- [Magic Lamp](https://mods.factorio.com/mod/magic-lamp) for displaying values. This mod can is not necessary for the
-  CPU operation.
-- [Pushbutton](https://mods.factorio.com/mod/pushbutton) for `reset` and `run` input.
+- [Magic Lamp](https://mods.factorio.com/mod/magic-lamp) for displaying values. This mod is not necessary for the CPU
+  operation.
+- [Pushbutton](https://mods.factorio.com/mod/pushbutton) for `RESET` and `RUN` input.
 
 ## Running a program
 
-The CPU blueprint found in `blueprints/cpu.txt` file is preloaded with `aha-mont64` benchmark
-from [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the cpu, press `RESET` (pushbuttons
-with red lamps) and `RUN` (pushbuttons with green lamps). The program executes 26567 instructions in 67746 ticks.
+The CPU blueprint found in `blueprints/cpu.txt` is preloaded with `aha-mont64` benchmark
+from [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press `RESET` (
+pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 26567 instructions in
+67746 ticks.
 
 ## Building and running a program from this repository
+
+The repository contains a copy of [riscv-arch-test](https://github.com/riscv-non-isa/riscv-arch-test) ISA verification
+programs and [embench-iot](https://github.com/embench/embench-iot) benchmarks with build scripts and environment setup
+customized for the Factorio RISCV CPU. To run them:
 
 - Install [GNU toolchain for RISC-V](https://github.com/riscv-collab/riscv-gnu-toolchain)
 - Install [mage](https://github.com/magefile/mage), a make-like tool based on Go.
