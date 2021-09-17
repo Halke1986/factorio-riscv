@@ -1,16 +1,8 @@
 /c local map={}
 
-local text = {
-#TEXT#
-}
-
-local data = {
-#DATA#
-}
-
 local signal_table = {
-	{type="item", name="wooden-chest"},
-	{type="item", name="iron-chest"},
+    {type="item", name="wooden-chest"},
+    {type="item", name="iron-chest"},
 	{type="item", name="steel-chest"},
 	{type="item", name="storage-tank"},
 	{type="item", name="transport-belt"},
@@ -265,88 +257,24 @@ local signal_table = {
 	{type="virtual", name="signal-white"},
 	{type="virtual", name="signal-grey"},
 	{type="virtual", name="signal-black"},
+	{type="item", name="rocket-part"},
+	{type="item", name="coin"},
 }
 
-function array_len(array)
-	n = 0
-	for _,_ in pairs(array) do
-		n = n + 1
-	end
-	return n
+local comb = game.player.selected
+local count = 0
+local index = 0
+
+function addSig(sig)
+  if count % 20 == 0 then
+    comb = game.player.surface.create_entity({name = "constant-combinator", position = {x=comb.position.x+1,y=comb.position.y}, force = game.forces.player})
+  end
+  comb.get_control_behavior().set_signal(index % 20 + 1, {signal=sig, count=(count + 1)*4})
+  count = count + 1
+  index = index + 1
+  return
 end
 
-function overflow(value)
-	if value >= 2147483648 then
-		return value - 2* 2147483648
-	end
-	return value
+for _,i in pairs(signal_table) do
+   addSig(i)
 end
-
-function encode_words(words, add_metadata, x_offset)
-	local start = game.player.selected
-	local words_len = array_len(words)
-    local words_left = words_len
-    local row_number = 0
-
-
-    while words_left > 0 do
-    	add_row(words, words_len, row_number, start.position, x_offset, add_metadata)
-    	words_left = words_left - 256
-    	row_number = row_number + 1
-    end
-end
-
-function add_row(words, words_len, row_number, start_pos, x_offset, add_metadata)
-    local words_left = words_len - row_number * 256
-    local idx = 1 + row_number * 256
-
-    if add_metadata == true then
-        add_rom_metadata(words, words_len, row_number, start_pos, x_offset)
-    end
-
-    local signal_idx = 1
-
-    for c = 1, 13 do
-        local cc = game.player.surface.create_entity({
-            name = "constant-combinator",
-            position = {x=start_pos.x + x_offset + c, y=start_pos.y + row_number},
-            force = game.forces.player})
-
-        for s = 1, 20 do
-            if words_left == 0 or signal_idx > 256 then
-                return
-            end
-
-            if inst ~= "0" then
-                cc.get_control_behavior().set_signal(s, {signal=signal_table[signal_idx], count=overflow(tonumber(words[idx],16))})
-            end
-
-            words_left = words_left - 1
-            signal_idx = signal_idx + 1
-            idx = idx + 1
-        end
-    end
-
-end
-
-function add_rom_metadata(words, words_len, row_number, start_pos, x_offset)
-    local words_left = words_len - row_number * 256
-    local idx = 1 + row_number * 256
-
-    cc = game.player.surface.create_entity({
-        name = "constant-combinator",
-        position = {x=start_pos.x + x_offset + 14, y=start_pos.y + row_number},
-        direction = 6,
-        force = game.forces.player})
-
-    if words_left > 256 then
-        cc.get_control_behavior().set_signal(1, {signal={type="item", name="rocket-part"}, count=overflow(tonumber(words[idx+256],16))})
-    end
-    if words_left > 257 then
-        cc.get_control_behavior().set_signal(2, {signal={type="item", name="coin"}, count=overflow(tonumber(words[idx+257],16))})
-    end
-    cc.get_control_behavior().set_signal(3, {signal={type="virtual", name="signal-info"}, count=2080373760 - row_number * 1024})
-end
-
-encode_words(text, true, 17)
-encode_words(data, false, 2)

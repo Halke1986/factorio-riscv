@@ -3,7 +3,7 @@
   .option norelax
   .globl _start
 _start:
-     li sp,0x8000 # All CPU implementations should have at least 32 frames of RAM memory.
+     li sp,0x4000 # All CPU implementations should have at least 16 frames of RAM memory.
   .option pop
 
   call main
