@@ -70,7 +70,7 @@ func compile(filePath, objPath, suite string) error {
 		"riscv64-unknown-elf-gcc",
 		"-ffreestanding",
 		"-nostartfiles",
-		"-march=rv32i",
+		"-march=rv32im",
 		"-mabi=ilp32",
 		"-O2",
 
@@ -91,7 +91,7 @@ func assemble(filePath, objPath string) error {
 			"WORK_DIR": workDir,
 		},
 		"riscv64-unknown-elf-as",
-		"-march=rv32i",
+		"-march=rv32im",
 		"-mabi=ilp32",
 
 		filePath,
@@ -108,7 +108,7 @@ func link(objects []string) error {
 		appendStrings(
 			"-ffreestanding",
 			"-nostartfiles",
-			"-march=rv32i",
+			"-march=rv32im",
 			"-mabi=ilp32",
 			"-O2",
 			"-Xlinker",

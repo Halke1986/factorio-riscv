@@ -2,15 +2,11 @@ package bootloader
 
 import "errors"
 
-type instructionType struct {
-	name string
+type instruction struct {
+	Name string
+	Type int
 
-	mask   uint32
-	opcode uint32
-	funct3 uint32
-	funct7 uint32
-
-	implemented bool
+	pattern uint32
 }
 
 const (
@@ -20,371 +16,323 @@ const (
 	opcodeMask = 0b1111111
 	funct3Mask = 0b111 << funct3Shift
 	funct7Mask = 0b1111111 << funct7Shift
-
-	bTypeOpcodeMask      = opcodeMask | funct3Mask
-	iTypeOpcodeMask      = opcodeMask | funct3Mask
-	jTypeOpcodeMask      = opcodeMask
-	rTypeOpcodeMask      = opcodeMask | funct3Mask | funct7Mask
-	sTypeOpcodeMask      = opcodeMask | funct3Mask
-	uTypeOpcodeMask      = opcodeMask
-	systemTypeOpcodeMask = opcodeMask | funct3Mask
 )
 
-var instructionTable = []instructionType{
+const (
+	TypeB = iota
+	TypeI
+	TypeJ
+	TypeR
+	TypeS
+	TypeU
+	TypeSystem
+)
+
+var unimplemented = map[string]bool{
+	"FENCE":        true,
+	"ECALL/EBREAK": true,
+	//"MUL":          true,
+	"MULH":         true,
+	"MULHSU":       true,
+	"MULHU":        true,
+	//"DIV":          true,
+	"DIVU":         true,
+	//"REM":          true,
+	"REMU": true,
+}
+
+var instructionTable = []instruction{
 	// B-type instructions
 	{
-		name:        "BEQ",
-		mask:        bTypeOpcodeMask,
-		opcode:      0b1100011,
-		funct3:      0b0,
-		implemented: true,
+		Name:    "BEQ",
+		Type:    TypeB,
+		pattern: funct3(0b0) | opcode(0b1100011),
 	},
 	{
-		name:        "BNE",
-		mask:        bTypeOpcodeMask,
-		opcode:      0b1100011,
-		funct3:      0b1,
-		implemented: true,
+		Name:    "BNE",
+		Type:    TypeB,
+		pattern: funct3(0b1) | opcode(0b1100011),
 	},
 	{
-		name:        "BLT",
-		mask:        bTypeOpcodeMask,
-		opcode:      0b1100011,
-		funct3:      0b100,
-		implemented: true,
+		Name:    "BLT",
+		Type:    TypeB,
+		pattern: funct3(0b100) | opcode(0b1100011),
 	},
 	{
-		name:        "BGE",
-		mask:        bTypeOpcodeMask,
-		opcode:      0b1100011,
-		funct3:      0b101,
-		implemented: true,
+		Name:    "BGE",
+		Type:    TypeB,
+		pattern: funct3(0b101) | opcode(0b1100011),
 	},
 	{
-		name:        "BLTU",
-		mask:        bTypeOpcodeMask,
-		opcode:      0b1100011,
-		funct3:      0b110,
-		implemented: true,
+		Name:    "BLTU",
+		Type:    TypeB,
+		pattern: funct3(0b110) | opcode(0b1100011),
 	},
 	{
-		name:        "BGEU",
-		mask:        bTypeOpcodeMask,
-		opcode:      0b1100011,
-		funct3:      0b111,
-		implemented: true,
+		Name:    "BGEU",
+		Type:    TypeB,
+		pattern: funct3(0b111) | opcode(0b1100011),
 	},
 
-	// I-type instructions
+	// Name-type instructions
 	{
-		name:        "JALR",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b1100111,
-		funct3:      0b0,
-		implemented: true,
+		Name:    "JALR",
+		Type:    TypeI,
+		pattern: funct3(0b0) | opcode(0b1100111),
 	},
 	{
-		name:        "LB",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b11,
-		funct3:      0b0,
-		implemented: true,
+		Name:    "LB",
+		Type:    TypeI,
+		pattern: funct3(0b0) | opcode(0b11),
 	},
 	{
-		name:        "LH",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b11,
-		funct3:      0b1,
-		implemented: true,
+		Name:    "LH",
+		Type:    TypeI,
+		pattern: funct3(0b1) | opcode(0b11),
 	},
 	{
-		name:        "LW",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b11,
-		funct3:      0b10,
-		implemented: true,
+		Name:    "LW",
+		Type:    TypeI,
+		pattern: funct3(0b10) | opcode(0b11),
 	},
 	{
-		name:        "LBU",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b11,
-		funct3:      0b100,
-		implemented: true,
+		Name:    "LBU",
+		Type:    TypeI,
+		pattern: funct3(0b100) | opcode(0b11),
 	},
 	{
-		name:        "LHU",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b11,
-		funct3:      0b101,
-		implemented: true,
+		Name:    "LHU",
+		Type:    TypeI,
+		pattern: funct3(0b101) | opcode(0b11),
 	},
 	{
-		name:        "ADDI",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b10011,
-		funct3:      0b0,
-		implemented: true,
+		Name:    "ADDI",
+		Type:    TypeI,
+		pattern: funct3(0b0) | opcode(0b10011),
 	},
 	{
-		name:        "SLTI",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b10011,
-		funct3:      0b10,
-		implemented: true,
+		Name:    "SLTI",
+		Type:    TypeI,
+		pattern: funct3(0b10) | opcode(0b10011),
 	},
 	{
-		name:        "SLTIU",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b10011,
-		funct3:      0b11,
-		implemented: true,
+		Name:    "SLTIU",
+		Type:    TypeI,
+		pattern: funct3(0b11) | opcode(0b10011),
 	},
 	{
-		name:        "XORI",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b10011,
-		funct3:      0b100,
-		implemented: true,
+		Name:    "XORI",
+		Type:    TypeI,
+		pattern: funct3(0b100) | opcode(0b10011),
 	},
 	{
-		name:        "ORI",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b10011,
-		funct3:      0b110,
-		implemented: true,
+		Name:    "ORI",
+		Type:    TypeI,
+		pattern: funct3(0b110) | opcode(0b10011),
 	},
 	{
-		name:        "ANDI",
-		mask:        iTypeOpcodeMask,
-		opcode:      0b10011,
-		funct3:      0b111,
-		implemented: true,
+		Name:    "ANDI",
+		Type:    TypeI,
+		pattern: funct3(0b111) | opcode(0b10011),
 	},
 
 	// J-type instructions
 	{
-		name:        "JAL",
-		mask:        jTypeOpcodeMask,
-		opcode:      0b1101111,
-		implemented: true,
+		Name:    "JAL",
+		Type:    TypeJ,
+		pattern: opcode(0b1101111),
 	},
 
 	// R-type instructions
 	{
-		name:        "SLLI",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b10011,
-		funct3:      0b1,
-		funct7:      0b0,
-		implemented: true,
+		Name:    "SLLI",
+		Type:    TypeR,
+		pattern: funct7(0b0) | funct3(0b1) | opcode(0b10011),
 	},
 	{
-		name:        "SRLI",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b10011,
-		funct3:      0b101,
-		funct7:      0b0,
-		implemented: true,
+		Name:    "SRLI",
+		Type:    TypeR,
+		pattern: funct7(0b0) | funct3(0b101) | opcode(0b10011),
 	},
 	{
-		name:        "SRAI",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b10011,
-		funct3:      0b101,
-		funct7:      0b100000,
-		implemented: true,
+		Name:    "SRAI",
+		Type:    TypeR,
+		pattern: funct7(0b100000) | funct3(0b101) | opcode(0b10011),
 	},
 	{
-		name:        "ADD",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b110011,
-		funct3:      0b0,
-		funct7:      0b0,
-		implemented: true,
+		Name:    "ADD",
+		Type:    TypeR,
+		pattern: funct7(0b0) | funct3(0b0) | opcode(0b110011),
 	},
 	{
-		name:        "SUB",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b110011,
-		funct3:      0b0,
-		funct7:      0b100000,
-		implemented: true,
+		Name:    "SUB",
+		Type:    TypeR,
+		pattern: funct7(0b100000) | funct3(0b0) | opcode(0b110011),
 	},
 	{
-		name:        "SLL",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b110011,
-		funct3:      0b1,
-		funct7:      0b0,
-		implemented: true,
+		Name:    "SLL",
+		Type:    TypeR,
+		pattern: funct7(0b0) | funct3(0b1) | opcode(0b110011),
 	},
 	{
-		name:        "SLT",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b110011,
-		funct3:      0b10,
-		funct7:      0b0,
-		implemented: true,
+		Name:    "SLT",
+		Type:    TypeR,
+		pattern: funct7(0b0) | funct3(0b10) | opcode(0b110011),
 	},
 	{
-		name:        "SLTU",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b110011,
-		funct3:      0b11,
-		funct7:      0b0,
-		implemented: true,
+		Name:    "SLTU",
+		Type:    TypeR,
+		pattern: funct7(0b0) | funct3(0b11) | opcode(0b110011),
 	},
 	{
-		name:        "XOR",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b110011,
-		funct3:      0b100,
-		funct7:      0b0,
-		implemented: true,
+		Name:    "XOR",
+		Type:    TypeR,
+		pattern: funct7(0b0) | funct3(0b100) | opcode(0b110011),
 	},
 	{
-		name:        "SRL",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b110011,
-		funct3:      0b101,
-		funct7:      0b0,
-		implemented: true,
+		Name:    "SRL",
+		Type:    TypeR,
+		pattern: funct7(0b0) | funct3(0b101) | opcode(0b110011),
 	},
 	{
-		name:        "SRA",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b110011,
-		funct3:      0b101,
-		funct7:      0b100000,
-		implemented: true,
+		Name:    "SRA",
+		Type:    TypeR,
+		pattern: funct7(0b100000) | funct3(0b101) | opcode(0b110011),
 	},
 	{
-		name:        "OR",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b110011,
-		funct3:      0b110,
-		funct7:      0b0,
-		implemented: true,
+		Name:    "OR",
+		Type:    TypeR,
+		pattern: funct7(0b0) | funct3(0b110) | opcode(0b110011),
 	},
 	{
-		name:        "AND",
-		mask:        rTypeOpcodeMask,
-		opcode:      0b110011,
-		funct3:      0b111,
-		funct7:      0b0,
-		implemented: true,
+		Name:    "AND",
+		Type:    TypeR,
+		pattern: funct7(0b0) | funct3(0b111) | opcode(0b110011),
 	},
 
 	// S-type instructions
 	{
-		name:        "SB",
-		mask:        sTypeOpcodeMask,
-		opcode:      0b100011,
-		funct3:      0b0,
-		implemented: true,
+		Name:    "SB",
+		Type:    TypeS,
+		pattern: funct3(0b0) | opcode(0b100011),
 	},
 	{
-		name:        "SH",
-		mask:        sTypeOpcodeMask,
-		opcode:      0b100011,
-		funct3:      0b1,
-		implemented: true,
+		Name:    "SH",
+		Type:    TypeS,
+		pattern: funct3(0b1) | opcode(0b100011),
 	},
 	{
-		name:        "SW",
-		mask:        sTypeOpcodeMask,
-		opcode:      0b100011,
-		funct3:      0b10,
-		implemented: true,
+		Name:    "SW",
+		Type:    TypeS,
+		pattern: funct3(0b10) | opcode(0b100011),
 	},
 
 	// U-type instructions
 	{
-		name:        "LUI",
-		mask:        uTypeOpcodeMask,
-		opcode:      0b110111,
-		implemented: true,
+		Name:    "LUI",
+		Type:    TypeU,
+		pattern: opcode(0b110111),
 	},
 	{
-		name:        "AUIPC",
-		mask:        uTypeOpcodeMask,
-		opcode:      0b10111,
-		implemented: true,
+		Name:    "AUIPC",
+		Type:    TypeU,
+		pattern: opcode(0b10111),
 	},
 
 	// SYSTEM instructions
 	{
-		name:        "FENCE",
-		mask:        systemTypeOpcodeMask,
-		opcode:      0b1111,
-		funct3:      0b0,
-		implemented: false,
+		Name:    "FENCE",
+		Type:    TypeSystem,
+		pattern: funct3(0b0) | opcode(0b1111),
 	},
 	{
-		name:        "FENCE.I",
-		mask:        systemTypeOpcodeMask,
-		opcode:      0b1111,
-		funct3:      0b1,
-		implemented: false,
+		Name:    "ECALL/EBREAK",
+		Type:    TypeSystem,
+		pattern: funct3(0b0) | opcode(0b1110011),
+	},
+
+	// M extension instructions
+	{
+		Name:    "MUL",
+		Type:    TypeR,
+		pattern: funct7(0b1) | funct3(0b0) | opcode(0b110011),
 	},
 	{
-		name:        "ECALL/EBREAK",
-		mask:        systemTypeOpcodeMask,
-		opcode:      0b1110011,
-		funct3:      0b0,
-		implemented: false,
+		Name:    "MULH",
+		Type:    TypeR,
+		pattern: funct7(0b1) | funct3(0b1) | opcode(0b110011),
 	},
 	{
-		name:        "CSRRW",
-		mask:        systemTypeOpcodeMask,
-		opcode:      0b1110011,
-		funct3:      0b1,
-		implemented: false,
+		Name:    "MULHSU",
+		Type:    TypeR,
+		pattern: funct7(0b1) | funct3(0b10) | opcode(0b110011),
 	},
 	{
-		name:        "CSRRS",
-		mask:        systemTypeOpcodeMask,
-		opcode:      0b1110011,
-		funct3:      0b10,
-		implemented: false,
+		Name:    "MULHU",
+		Type:    TypeR,
+		pattern: funct7(0b1) | funct3(0b11) | opcode(0b110011),
 	},
 	{
-		name:        "CSRRC",
-		mask:        systemTypeOpcodeMask,
-		opcode:      0b1110011,
-		funct3:      0b11,
-		implemented: false,
+		Name:    "DIV",
+		Type:    TypeR,
+		pattern: funct7(0b1) | funct3(0b100) | opcode(0b110011),
 	},
 	{
-		name:        "CSRRWI",
-		mask:        systemTypeOpcodeMask,
-		opcode:      0b1110011,
-		funct3:      0b101,
-		implemented: false,
+		Name:    "DIVU",
+		Type:    TypeR,
+		pattern: funct7(0b1) | funct3(0b101) | opcode(0b110011),
 	},
 	{
-		name:        "CSRRSI",
-		mask:        systemTypeOpcodeMask,
-		opcode:      0b1110011,
-		funct3:      0b110,
-		implemented: false,
+		Name:    "REM",
+		Type:    TypeR,
+		pattern: funct7(0b1) | funct3(0b110) | opcode(0b110011),
 	},
 	{
-		name:        "CSRRCI",
-		mask:        systemTypeOpcodeMask,
-		opcode:      0b1110011,
-		funct3:      0b111,
-		implemented: false,
+		Name:    "REMU",
+		Type:    TypeR,
+		pattern: funct7(0b1) | funct3(0b111) | opcode(0b110011),
 	},
 }
 
-func parseInstruction(encoded uint32) (instructionType, error) {
+func matchInstruction(encoded uint32) (instruction, error) {
 	for _, i := range instructionTable {
-		pattern := i.opcode | (i.funct3 << funct3Shift) | (i.funct7 << funct7Shift)
-		if encoded&i.mask == pattern {
+		if encoded&patterMask(i.Type) == i.pattern {
 			return i, nil
 		}
 	}
 
-	return instructionType{}, errors.New("unknown instruction")
+	return instruction{}, errors.New("unknown instruction")
+}
+
+func opcode(o uint32) uint32 {
+	return o
+}
+
+func funct3(f uint32) uint32 {
+	return f << funct3Shift
+}
+
+func funct7(f uint32) uint32 {
+	return f << funct7Shift
+}
+
+func patterMask(typ int) uint32 {
+	switch typ {
+	case TypeB:
+		return opcodeMask | funct3Mask
+	case TypeI:
+		return opcodeMask | funct3Mask
+	case TypeJ:
+		return opcodeMask
+	case TypeR:
+		return opcodeMask | funct3Mask | funct7Mask
+	case TypeS:
+		return opcodeMask | funct3Mask
+	case TypeU:
+		return opcodeMask
+	case TypeSystem:
+		return opcodeMask | funct3Mask
+	default:
+		return 0
+	}
 }
