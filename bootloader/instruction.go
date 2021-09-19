@@ -31,14 +31,9 @@ const (
 var unimplemented = map[string]bool{
 	"FENCE":        true,
 	"ECALL/EBREAK": true,
-	//"MUL":          true,
 	"MULH":         true,
 	"MULHSU":       true,
 	"MULHU":        true,
-	//"DIV":          true,
-	"DIVU":         true,
-	//"REM":          true,
-	"REMU": true,
 }
 
 var instructionTable = []instruction{
