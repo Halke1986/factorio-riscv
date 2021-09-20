@@ -113,9 +113,9 @@ int32_t mul_mod_24(int32_t a, int32_t b, int32_t m) {
 
 /*  Perfect 32-bit modulo multiplication, requires 64-bit instructions
  */
-int32_t mul_mod_32(int32_t a, int32_t b, int32_t m) {
-    return (int64_t)a * (int64_t)b % m;
-}
+//int32_t mul_mod_32(int32_t a, int32_t b, int32_t m) {
+//    return (int64_t)a * (int64_t)b % m;
+//}
 
 /*  Return a^b.
  *  This is a built-in instruction in Factorio
@@ -359,5 +359,5 @@ int32_t pifactory(int32_t start_digit) {
 }
 
 int32_t main() {
-    return pifactory(1);
+    volatile int result = pifactory(0);
 }
