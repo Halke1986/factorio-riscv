@@ -33,7 +33,6 @@ var unimplemented = map[string]bool{
 	"ECALL/EBREAK": true,
 	"MULH":         true,
 	"MULHSU":       true,
-	"MULHU":        true,
 }
 
 var instructionTable = []instruction{
