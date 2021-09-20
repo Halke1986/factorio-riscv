@@ -38,17 +38,17 @@ func parseTextSections(sections map[string]elfSection) ([]uint32, error) {
 			continue
 		}
 
-		inst, err := parseInstruction(w)
+		inst, err := matchInstruction(w)
 		if err != nil {
 			return nil, err
 		}
 
 		//fmt.Printf("%x %s\n", 0x4000000+i*4, inst.name)
 
-		usedInstructions[inst.name]++
+		usedInstructions[inst.Name]++
 
-		if !inst.implemented {
-			unimplementedInstructions[inst.name]++
+		if unimplemented[inst.Name] {
+			unimplementedInstructions[inst.Name]++
 		}
 	}
 

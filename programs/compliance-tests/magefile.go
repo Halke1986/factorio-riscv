@@ -44,7 +44,7 @@ func build(instruction string) error {
 		"riscv64-unknown-elf-gcc",
 		"-ffreestanding",
 		"-nostdlib",
-		"-march=rv32i",
+		"-march=rv32im",
 		"-mabi=ilp32",
 
 		"${WORK_DIR}/src/${INSTRUCTION}-01.S",
