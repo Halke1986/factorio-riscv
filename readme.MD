@@ -25,8 +25,8 @@ The logic part of the CPU is completely vanilla, but there are some QOL mods use
 
 The CPU blueprint found in `blueprints/cpu.txt` is preloaded with `nettle-sha256` benchmark from
 the [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press `RESET` (
-pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 26567 instructions in
-67746 ticks.
+pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 8674 instructions in
+24293 ticks.
 
 ## Building and running a program from this repository
 
@@ -79,7 +79,7 @@ The CPU required 3.2 ticks for instruction on average.
 |crc32          |22601       |59728       |2.643     | 
 |tarfind        |21314       |58797       |2.759     | 
 |minver         |11654       |37476       |3.216     | 
-|aha-mont64     |10824       |27427       |2.534     | 
+|aha-mont64     |10824       |27343	      |2.526     | 
 |nettle-sha256  |8674        |24293       |2.801     | 
 |ud             |2562        |7902        |3.084     | 
 |nsichneu       |1967        |10423       |5.299     | 

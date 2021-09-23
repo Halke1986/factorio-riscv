@@ -31,8 +31,6 @@ const (
 var unimplemented = map[string]bool{
 	"FENCE":        true,
 	"ECALL/EBREAK": true,
-	"MULH":         true,
-	"MULHSU":       true,
 }
 
 var instructionTable = []instruction{
