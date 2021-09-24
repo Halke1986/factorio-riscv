@@ -9,6 +9,7 @@
 - `FENCE`, `ECALL` and `EBREAK` instructions are not implemented. Calling them results in program abort.
 - There is no input or output. At the current stage of development the CPU is designed to run benchmarks and ISA
   verification suites.
+- RAM and code ROM are 16kB, but can be easily extended.
 
 ## Factorio version and mods required
 
@@ -37,9 +38,9 @@ customized for the Factorio RISCV CPU. To run them:
 - Install [GNU toolchain for RISC-V](https://github.com/riscv-collab/riscv-gnu-toolchain)
 - Install [mage](https://github.com/magefile/mage), a make-like tool based on Go.
 - Build the program. E.g. to build `huffbench`, one of the embench-iot suites, run `mage embench:build huffbench`.
-- Copy contents of `bootloader.lua` file to Factorio console, place the cursor over a constant combinator and run the
-  script.
-- Copy the generated ROMs to bootloader section of the CPU.
+- Copy contents of `bootloader.lua` file to Factorio console, place the cursor over the wooden box on top of the ROM
+  section and run the script. If selected program requires more than 16kB of code ROM, extend the ROM section by in-game
+  copy tool and then run the script again.
 - Press `RESET` pushbutton.
 - Press `RUN` pushbutton.
 
@@ -79,7 +80,7 @@ The CPU required 3.2 ticks for instruction on average.
 |crc32          |22601       |59728       |2.643     | 
 |tarfind        |21314       |58797       |2.759     | 
 |minver         |11654       |37476       |3.216     | 
-|aha-mont64     |10824       |27343	      |2.526     | 
+|aha-mont64     |10824       |27343          |2.526     | 
 |nettle-sha256  |8674        |24293       |2.801     | 
 |ud             |2562        |7902        |3.084     | 
 |nsichneu       |1967        |10423       |5.299     | 
