@@ -22,7 +22,7 @@ func Build(suite string) error {
 		return err
 	}
 
-	return bootloader.Make(elfPath, bootloaderPath)
+	return bootloader.Make(elfPath, bootloaderPath, nil)
 }
 
 func build(suite string) error {

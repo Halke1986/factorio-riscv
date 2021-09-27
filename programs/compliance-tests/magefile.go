@@ -1,25 +1,21 @@
 package embench
 
 import (
+	"bufio"
 	_ "embed"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"riscv/bootloader"
-	"strings"
+	"strconv"
 
 	"github.com/magefile/mage/sh"
 )
 
-//go:embed reference-template.lua
-var referenceTemplate string
-
 const (
 	workDir = "./programs/compliance-tests"
 
-	elfPath             = "elf"
-	bootloaderPath      = "bootloader.lua"
-	referenceOutputPath = "bootloader-reference.lua"
+	elfPath        = "elf"
+	bootloaderPath = "bootloader.lua"
 )
 
 // Build build test for selected instruction
@@ -28,11 +24,12 @@ func Build(instruction string) error {
 		return err
 	}
 
-	if err := makeReference(instruction); err != nil {
+	referenceData, err := readReference(instruction)
+	if err != nil {
 		return err
 	}
 
-	return bootloader.Make(elfPath, bootloaderPath)
+	return bootloader.Make(elfPath, bootloaderPath, &referenceData)
 }
 
 func build(instruction string) error {
@@ -55,28 +52,27 @@ func build(instruction string) error {
 	)
 }
 
-func makeReference(instruction string) error {
+func readReference(instruction string) ([]uint32, error) {
 	referencePath := fmt.Sprintf("%s/references/%s-01.reference_output", workDir, instruction)
-	referenceRaw, err := ioutil.ReadFile(referencePath)
+	f, err := os.Open(referencePath)
 	if err != nil {
-		return err
+		return nil, err
+	}
+	defer func() { _ = f.Close() }()
+
+	referenceData := []uint32(nil)
+
+	sc := bufio.NewScanner(f)
+	for sc.Scan() {
+		i, err := strconv.ParseInt(sc.Text(), 16, 64)
+		if err != nil {
+			return nil, err
+		}
+		referenceData = append(referenceData, uint32(i))
+	}
+	if err := sc.Err(); err != nil {
+		return nil, err
 	}
 
-	firstFrame := []byte(nil)
-	for i := 0; i < 256; i++ {
-		firstFrame = append(firstFrame, []byte(`"0",`)...)
-	}
-
-	reference := strings.ReplaceAll(string(referenceRaw), "\n", `","`)
-	reference = strings.TrimSuffix(reference, `"`)
-	reference = string(firstFrame) + `"` + reference
-	referenceBootloader := strings.Replace(referenceTemplate, "#REFERENCE#", reference, 1)
-
-	output, err := os.Create(referenceOutputPath)
-	if err != nil {
-		return err
-	}
-
-	_, err = fmt.Fprint(output, referenceBootloader)
-	return err
+	return referenceData, nil
 }

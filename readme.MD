@@ -10,6 +10,10 @@
 - There is no input or output. At the current stage of development the CPU is designed to run benchmarks and ISA
   verification suites.
 - RAM and code ROM are 16kB, but can be easily extended.
+- The CPU blueprint found in `blueprints/cpu.txt` is preloaded with `nettle-sha256` benchmark from
+  the [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press `RESET` (
+  pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 8674 instructions in
+  24293 ticks.
 
 ## Factorio version and mods required
 
@@ -22,13 +26,6 @@ The logic part of the CPU is completely vanilla, but there are some QOL mods use
   operation.
 - [Pushbutton](https://mods.factorio.com/mod/pushbutton) for `RESET` and `RUN` input.
 
-## Running a program
-
-The CPU blueprint found in `blueprints/cpu.txt` is preloaded with `nettle-sha256` benchmark from
-the [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press `RESET` (
-pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 8674 instructions in
-24293 ticks.
-
 ## Building and running a program from this repository
 
 The repository contains a copy of [riscv-arch-test](https://github.com/riscv-non-isa/riscv-arch-test) ISA verification
@@ -37,7 +34,11 @@ customized for the Factorio RISCV CPU. To run them:
 
 - Install [GNU toolchain for RISC-V](https://github.com/riscv-collab/riscv-gnu-toolchain)
 - Install [mage](https://github.com/magefile/mage), a make-like tool based on Go.
-- Build the program. E.g. to build `huffbench`, one of the embench-iot suites, run `mage embench:build huffbench`.
+- Build the program. To build one of the embench-iot suites, run `mage embench:build _suite_`, where `_suite_` is name
+  of the selected suite, eg. `huffbench`. To build one of the compliance tests, run `mage compliance:build _inst_`,
+  where `_inst_` is name of teh instruction to test, eg. `addi`.
+- When running compliance test, add the circuit in `blueprints/compliance-tests-addon.txt` to the CPU. It's used to
+  compare the results of the test run to an expected reference.
 - Copy contents of `bootloader.lua` file to Factorio console, place the cursor over the wooden box on top of the ROM
   section and run the script. If selected program requires more than 16kB of code ROM, extend the ROM section by in-game
   copy tool and then run the script again.
@@ -80,7 +81,7 @@ The CPU required 3.2 ticks for instruction on average.
 |crc32          |22601       |59728       |2.643     | 
 |tarfind        |21314       |58797       |2.759     | 
 |minver         |11654       |37476       |3.216     | 
-|aha-mont64     |10824       |27343          |2.526     | 
+|aha-mont64     |10824       |27343       |2.526     | 
 |nettle-sha256  |8674        |24293       |2.801     | 
 |ud             |2562        |7902        |3.084     | 
 |nsichneu       |1967        |10423       |5.299     | 
