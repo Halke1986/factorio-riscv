@@ -142,7 +142,7 @@ game.print(".data: " .. tostring(#data*4) .. " bytes")
 encode_words(text, true, 15, 0)
 game.print(".text: " .. tostring(#text*4) .. " bytes")
 
+encode_words(reference, false, -30, 1)
 if #reference ~= 0 then
-    encode_words(reference, false, -30, 1)
     game.print("reference: " .. tostring(#reference*4) .. " bytes")
 end
