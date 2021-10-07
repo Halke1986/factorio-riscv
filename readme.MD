@@ -12,8 +12,8 @@
 - RAM and code ROM are 16kB, but can be easily extended.
 - The CPU blueprint found in `blueprints/cpu.txt` is preloaded with `nettle-sha256` benchmark from
   the [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press `RESET` (
-  pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 8674 instructions in
-  24293 ticks.
+  pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 8671 instructions in
+  24219 ticks.
 
 ## Factorio version and mods required
 
@@ -59,7 +59,7 @@ TODO
 ## CPU Performance
 
 Performance was measured using `embench-iot` suite. Each benchmark was modified to run a single iteration to limit the
-run time.
+run time. Benchamrks were compiled with `riscv64-unknown-elf-gcc (GCC) 11.1.0`.
 
 The CPU required 3.2 ticks for instruction on average.
 
