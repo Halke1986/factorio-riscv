@@ -4,15 +4,20 @@
 
 ## CPU
 
-- The CPU implements `RV32I ISA version 2.1` in accordance with `The RISC-V Instruction Set Manual version 20191213`.
+- The CPU implements `RV32IM ISA version 2.1` in accordance with `The RISC-V Instruction Set Manual version 20191213`.
 - Traps and exceptions are not implemented.
 - `FENCE`, `ECALL` and `EBREAK` instructions are not implemented. Calling them results in program abort.
 - There is no input or output. At the current stage of development the CPU is designed to run benchmarks and ISA
   verification suites.
+- RAM and code ROM are 16kB, but can be easily extended.
+- The CPU blueprint found in `blueprints/cpu.txt` is preloaded with `nettle-sha256` benchmark from
+  the [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press `RESET` (
+  pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 8671 instructions in
+  24219 ticks.
 
 ## Factorio version and mods required
 
-The CPU is being developed in Factorio 1.1.27.
+The CPU is being developed in Factorio 1.1.39.
 
 The logic part of the CPU is completely vanilla, but there are some QOL mods used.
 
@@ -20,13 +25,6 @@ The logic part of the CPU is completely vanilla, but there are some QOL mods use
 - [Magic Lamp](https://mods.factorio.com/mod/magic-lamp) for displaying values. This mod is not necessary for the CPU
   operation.
 - [Pushbutton](https://mods.factorio.com/mod/pushbutton) for `RESET` and `RUN` input.
-
-## Running a program
-
-The CPU blueprint found in `blueprints/cpu.txt` is preloaded with `aha-mont64` benchmark
-from [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press `RESET` (
-pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 26567 instructions in
-67746 ticks.
 
 ## Building and running a program from this repository
 
@@ -36,10 +34,14 @@ customized for the Factorio RISCV CPU. To run them:
 
 - Install [GNU toolchain for RISC-V](https://github.com/riscv-collab/riscv-gnu-toolchain)
 - Install [mage](https://github.com/magefile/mage), a make-like tool based on Go.
-- Build the program. E.g. to build `huffbench`, one of the embench-iot suites, run `mage embench:build huffbench`.
-- Copy contents of `bootloader.lua` file to Factorio console, place the cursor over a constant combinator and run the
-  script.
-- Copy the generated ROMs to bootloader section of the CPU.
+- Build the program. To build one of the embench-iot suites, run `mage embench:build _suite_`, where `_suite_` is name
+  of the selected suite, eg. `huffbench`. To build one of the compliance tests, run `mage compliance:build _inst_`,
+  where `_inst_` is name of teh instruction to test, eg. `addi`.
+- When running compliance test, add the circuit in `blueprints/compliance-tests-addon.txt` to the CPU. It's used to
+  compare the results of the test run to an expected reference.
+- Copy contents of `bootloader.lua` file to Factorio console, place the cursor over the wooden box on top of the ROM
+  section and run the script. If selected program requires more than 16kB of code ROM, extend the ROM section by in-game
+  copy tool and then run the script again.
 - Press `RESET` pushbutton.
 - Press `RUN` pushbutton.
 
@@ -54,30 +56,33 @@ TODO
 - Benchmark suites from [embench-iot](https://github.com/embench/embench-iot) were successfully completed (`md5sum`
   was excluded, as it fails even on desktop environment and contains library calls like `printf` and `calloc`).
 
-## CPU Performance (outdated, current implementation requires ~3 ticks per instruction)
+## CPU Performance
 
-- Benchmark suites from `embench-iot` were modified to run a single iteration to limit the run time.
+Performance was measured using `embench-iot` suite. Each benchmark was modified to run a single iteration to limit the
+run time. Benchamrks were compiled with `riscv64-unknown-elf-gcc (GCC) 11.1.0`.
+
+The CPU required 3.2 ticks for instruction on average.
 
 |Benchmark suite|Ticks       |Instructions|Ticks/Inst|
 |---------------|------------|------------|----------|
-|nbody          |60864591    |13113296    |4.641     |
-|primecount     |25256785    |5109583     |4.943     |
-|picojpeg       |19888072    |4321841     |4.602     |
-|wikisort       |14647531    |3064590     |4.78      |
-|cubic          |12498103    |2692346     |4.642     |
-|st             |5830378     |1251369     |4.659     |
-|qrduino        |4881350     |1025041     |4.762     |
-|edn            |4003593     |847449      |4.724     |
-|matmult-int    |3274661     |688261      |4.758     |
-|huffbench      |1120201     |225303      |4.972     |
-|tarfind        |517446      |109507      |4.725     |
-|sglib-combined |517269      |99990       |5.173     |
-|nettle-aes     |302723      |65612       |4.614     |
-|crc32          |145752      |33865       |4.304     |
-|aha-mont64     |115223      |26567       |4.337     |
-|minver         |123256      |26197       |4.705     |
-|slre           |123919      |24771       |5.003     |
-|nettle-sha256  |37710       |8674        |4.347     |
-|ud             |21070       |4388        |4.802     |
-|nsichneu       |12442       |1967        |6.325     |
-|statemate      |5977        |1121        |5.332     |
+|picojpeg       |3839249     |11544344    |3.007     |
+|nbody          |3226653     |9046915     |2.804     | 
+|primecount     |2112260     |7106643     |3.364     | 
+|wikisort       |1269455     |4161610     |3.278     | 
+|cubic          |788629      |2368798     |3.004     | 
+|qrduino        |568212      |1745094     |3.071     | 
+|st             |307496      |918027      |2.985     | 
+|huffbench      |225479      |708031      |3.14      |
+|sglib-combined |94209       |315711      |3.351     | 
+|matmult-int    |80269       |254568      |3.171     | 
+|nettle-aes     |61007       |171435      |2.81      | 
+|edn            |43267       |147979      |3.42      |
+|slre           |23323       |80686       |3.46      | 
+|crc32          |22609       |59753       |2.643     | 
+|tarfind        |21685       |59905       |2.763     | 
+|minver         |11765       |36859       |3.133     | 
+|aha-mont64     |10847       |27425       |2.528     | 
+|nettle-sha256  |8671        |24219       |2.793     | 
+|ud             |2597        |7961        |3.065     | 
+|nsichneu       |1943        |10361       |5.332     | 
+|statemate      |1095        |4527        |4.134     |

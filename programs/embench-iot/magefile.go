@@ -22,7 +22,7 @@ func Build(suite string) error {
 		return err
 	}
 
-	return bootloader.Make(elfPath, bootloaderPath)
+	return bootloader.Make(elfPath, bootloaderPath, nil)
 }
 
 func build(suite string) error {
@@ -70,6 +70,7 @@ func compile(filePath, objPath, suite string) error {
 		"riscv64-unknown-elf-gcc",
 		"-ffreestanding",
 		"-nostartfiles",
+		"-specs=nosys.specs",
 		"-march=rv32im",
 		"-mabi=ilp32",
 		"-O2",
@@ -108,6 +109,7 @@ func link(objects []string) error {
 		appendStrings(
 			"-ffreestanding",
 			"-nostartfiles",
+			"-specs=nosys.specs",
 			"-march=rv32im",
 			"-mabi=ilp32",
 			"-O2",
