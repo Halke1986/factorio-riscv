@@ -9,11 +9,17 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
+const (
+	elfPath        = "../../elf"
+	bootloaderPath = "../../bootloader.lua"
+)
+
 func Build() error {
 	if err := sh.RunV(
 		"riscv64-unknown-elf-gcc",
 		"-ffreestanding",
 		"-nostartfiles",
+		"-specs=nosys.specs",
 		"-march=rv32im",
 		"-mabi=ilp32",
 		"-O2",
@@ -39,19 +45,21 @@ func Build() error {
 		"riscv64-unknown-elf-gcc",
 		"-ffreestanding",
 		"-nostartfiles",
+		"-specs=nosys.specs",
 		"-march=rv32im",
 		"-mabi=ilp32",
 		"-O2",
+
 		"-Xlinker",
 		"-Tlink.ld",
 		"pifactory.o",
 		"crt.o",
 		"-lgcc",
 		"-lm",
-		"-o", "elf",
+		"-o", elfPath,
 	); err != nil {
 		return err
 	}
 
-	return bootloader.Make("elf", "bootloader.lua")
+	return bootloader.Make(elfPath, bootloaderPath, nil)
 }
