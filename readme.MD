@@ -12,7 +12,7 @@
 - RAM and code ROM are 16kB, but can be easily extended.
 - The CPU blueprint found in `blueprints/cpu.txt` is preloaded with `nettle-sha256` benchmark from
   the [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press `RESET` (
-  pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 8671 instructions in
+  pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 8670 instructions in
   24219 ticks.
 
 ## Factorio version and mods required
@@ -63,26 +63,26 @@ run time. Benchamrks were compiled with `riscv64-unknown-elf-gcc (GCC) 11.1.0`.
 
 The CPU required 3.2 ticks for instruction on average.
 
-|Benchmark suite|Ticks       |Instructions|Ticks/Inst|
+|Benchmark suite|Instructions|Ticks       |Ticks/Inst|
 |---------------|------------|------------|----------|
-|picojpeg       |3839249     |11544344    |3.007     |
-|nbody          |3226653     |9046915     |2.804     | 
-|primecount     |2112260     |7106643     |3.364     | 
-|wikisort       |1269455     |4161610     |3.278     | 
-|cubic          |788629      |2368798     |3.004     | 
-|qrduino        |568212      |1745094     |3.071     | 
-|st             |307496      |918027      |2.985     | 
-|huffbench      |225479      |708031      |3.14      |
-|sglib-combined |94209       |315711      |3.351     | 
-|matmult-int    |80269       |254568      |3.171     | 
-|nettle-aes     |61007       |171435      |2.81      | 
-|edn            |43267       |147979      |3.42      |
-|slre           |23323       |80686       |3.46      | 
-|crc32          |22609       |59753       |2.643     | 
-|tarfind        |21685       |59905       |2.763     | 
-|minver         |11765       |36859       |3.133     | 
-|aha-mont64     |10847       |27425       |2.528     | 
-|nettle-sha256  |8671        |24219       |2.793     | 
-|ud             |2597        |7961        |3.065     | 
-|nsichneu       |1943        |10361       |5.332     | 
-|statemate      |1095        |4527        |4.134     |
+|picojpeg       |3839248     |11544344    |3.007     |
+|nbody          |3226652     |9046915     |2.804     | 
+|primecount     |2112259     |7106643     |3.364     | 
+|wikisort       |1269454     |4161610     |3.278     | 
+|cubic          |788628      |2368798     |3.004     | 
+|qrduino        |568211      |1745094     |3.071     | 
+|st             |307495      |918027      |2.985     | 
+|huffbench      |225478      |708031      |3.14      |
+|sglib-combined |94208       |315711      |3.351     | 
+|matmult-int    |80268       |254568      |3.171     | 
+|nettle-aes     |61006       |171435      |2.81      | 
+|edn            |43266       |147979      |3.42      |
+|slre           |23322       |80686       |3.46      | 
+|crc32          |22608       |59753       |2.643     | 
+|tarfind        |21684       |59905       |2.763     | 
+|minver         |11764       |36859       |3.133     | 
+|aha-mont64     |10846       |27425       |2.528     | 
+|nettle-sha256  |8670        |24219       |2.793     | 
+|ud             |2596        |7961        |3.065     | 
+|nsichneu       |1942        |10361       |5.332     | 
+|statemate      |1094        |4527        |4.134     |
