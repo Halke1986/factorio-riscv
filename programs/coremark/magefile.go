@@ -1,18 +1,20 @@
 package coremark
 
 import (
+	bld "riscv/build-scripts"
+
 	"github.com/magefile/mage/sh"
 )
 
-const (
-	workDir = "./programs/embench-iot"
+const workDir = "./programs/coremark"
 
-	elfPath        = "elf"
-	bootloaderPath = "bootloader.lua"
-)
-
+// BuildHost builds the coremark binary for execution on host
 func BuildHost() error {
-	if err := sh.RunV(
+	return bld.InDir(workDir, "coremark.run", buildHost)
+}
+
+func buildHost() error {
+	return sh.RunV(
 		"gcc",
 
 		"src/core_list_join.c",
@@ -20,10 +22,9 @@ func BuildHost() error {
 		"src/core_matrix.c",
 		"src/core_state.c",
 		"src/core_util.c",
+		"posix/core_portme.c",
 
-		"src/posix/core_portme.c",
-
-		"-I", "src/posix/",
+		"-I", "posix/",
 		"-I", "src/",
 
 		"-DCOMPILER_FLAGS=\"-O2\"",
@@ -33,11 +34,7 @@ func BuildHost() error {
 		"-O2",
 
 		"-o", "coremark.run",
-	); err != nil {
-		return err
-	}
-
-	return nil
+	)
 }
 
 //

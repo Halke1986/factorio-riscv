@@ -13,6 +13,8 @@ import (
 	_ "riscv/programs/compliance-tests"
 	// mage:import pifactory
 	_ "riscv/programs/pifactory"
+	// mage:import coremark
+	_ "riscv/programs/coremark"
 
 	"github.com/magefile/mage/sh"
 )

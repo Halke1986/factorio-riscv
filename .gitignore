@@ -8,3 +8,4 @@ bootloader-reference.lua
 out
 out.asm
 *.o
+*.run
