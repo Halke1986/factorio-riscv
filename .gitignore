@@ -4,8 +4,6 @@
 # Output & temporary files
 elf
 bootloader.lua
-bootloader-reference.lua
-out
 out.asm
 *.o
 *.run

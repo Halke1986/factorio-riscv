@@ -1,6 +1,7 @@
 package coremark
 
 import (
+	"riscv/bootloader"
 	bld "riscv/build-scripts"
 	"strings"
 
@@ -37,16 +38,16 @@ func buildHost() error {
 	)
 }
 
-//// Build build selected benchmark
-//func Build(suite string) error {
-//	if err := build(suite); err != nil {
-//		return err
-//	}
-//
-//	return bootloader.Make(elfPath, bootloaderPath, nil)
-//}
+// Build builds coremark benchmark
+func Build() error {
+	if err := bld.InDir(workDir, bld.ElfPath, build); err != nil {
+		return err
+	}
 
-func build(suite string) error {
+	return bootloader.Make(bld.ElfPath, bld.BootloaderPath, nil)
+}
+
+func build() error {
 	sources := []string{
 		"src/core_list_join.c",
 		"src/core_main.c",
@@ -60,8 +61,10 @@ func build(suite string) error {
 
 	// Compile or assemble all required sources.
 	objects := []string(nil)
+	defer func() { _ = bld.Clean(objects) }()
+
 	for _, sourcePath := range sources {
-		objPath := bld.MakeObjPath(sourcePath, "build/")
+		objPath := bld.MakeObjPath(sourcePath, "")
 		objects = append(objects, objPath)
 
 		if strings.HasSuffix(sourcePath, "c") {
@@ -69,14 +72,13 @@ func build(suite string) error {
 				return err
 			}
 		} else {
-			//if err := assemble(sourcePath, objPath); err != nil {
-			//	return err
-			//}
+			if err := assemble(sourcePath, objPath); err != nil {
+				return err
+			}
 		}
 	}
 
-	//return link(objects)
-	return nil
+	return link(objects)
 }
 
 func compile(filePath, objPath string) error {
@@ -93,6 +95,8 @@ func compile(filePath, objPath string) error {
 		"-Ienv/",
 
 		"-DCOMPILER_FLAGS=\"-O2\"",
+		"-DITERATIONS=1",
+		"-DCLOCKS_PER_SEC=60",
 		"-DCORE_DEBUG=1",
 
 		"-c", filePath,
@@ -100,61 +104,37 @@ func compile(filePath, objPath string) error {
 	)
 }
 
-//func assemble(filePath, objPath string) error {
-//	return sh.RunWithV(
-//		map[string]string{
-//			"WORK_DIR": workDir,
-//		},
-//		"riscv64-unknown-elf-as",
-//		"-march=rv32im",
-//		"-mabi=ilp32",
-//
-//		filePath,
-//		"-o", objPath,
-//	)
-//}
-//
-//func link(objects []string) error {
-//	return sh.RunWithV(
-//		map[string]string{
-//			"WORK_DIR": workDir,
-//		},
-//		"riscv64-unknown-elf-gcc",
-//		appendStrings(
-//			"-ffreestanding",
-//			"-nostartfiles",
-//			"-specs=nosys.specs",
-//			"-march=rv32im",
-//			"-mabi=ilp32",
-//			"-O2",
-//			"-Xlinker",
-//			"-T${WORK_DIR}/env/link.ld",
-//			objects,
-//			"-lgcc",
-//			"-lm",
-//			"-o", elfPath,
-//		)...,
-//	)
-//}
-//
-//func makeObjPath(sourcePath string) string {
-//	elems := strings.Split(sourcePath, "/")
-//	file := elems[len(elems)-1]
-//	fileName := strings.Split(file, ".")[0]
-//	return "${WORK_DIR}/build/" + fileName + ".o"
-//}
-//
-//// appendStrings appends strings and string slices into one slice.
-//func appendStrings(ss ...interface{}) []string {
-//	result := []string(nil)
-//	for i := range ss {
-//		switch v := ss[i].(type) {
-//		case string:
-//			result = append(result, v)
-//		case []string:
-//			result = append(result, v...)
-//		}
-//	}
-//
-//	return result
-//}
+func assemble(filePath, objPath string) error {
+	return sh.RunWithV(
+		map[string]string{
+			"WORK_DIR": workDir,
+		},
+		"riscv64-unknown-elf-as",
+		"-march=rv32im",
+		"-mabi=ilp32",
+
+		filePath,
+		"-o", objPath,
+	)
+}
+
+func link(objects []string) error {
+	return sh.RunV(
+		"riscv64-unknown-elf-gcc",
+		bld.AppendStrings(
+			"-ffreestanding",
+			"-nostartfiles",
+			"-specs=nosys.specs",
+			"-march=rv32im",
+			"-mabi=ilp32",
+			"-O2",
+
+			"-Xlinker",
+			"-Tenv/link.ld",
+			objects,
+			"-lgcc",
+			"-lm",
+			"-o", bld.ElfPath,
+		)...,
+	)
+}
