@@ -60,3 +60,13 @@ func AppendStrings(ss ...interface{}) []string {
 
 	return result
 }
+
+// Clean removes the listed files.
+func Clean(files []string) error {
+	for _, f := range files {
+		if err := os.Remove(f); err != nil {
+			return err
+		}
+	}
+	return nil
+}

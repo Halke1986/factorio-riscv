@@ -41,8 +41,10 @@ func build(suite string) error {
 
 	// Compile or assemble all required sources.
 	objects := []string(nil)
+	defer func() { _ = bld.Clean(objects) }()
+
 	for _, sourcePath := range sources {
-		objPath := bld.MakeObjPath(sourcePath, "build/")
+		objPath := bld.MakeObjPath(sourcePath, "")
 		objects = append(objects, objPath)
 
 		if strings.HasSuffix(sourcePath, "c") {
