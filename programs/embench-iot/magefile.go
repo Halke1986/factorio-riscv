@@ -4,30 +4,28 @@ import (
 	"fmt"
 	"path/filepath"
 	"riscv/bootloader"
+	bld "riscv/build-scripts"
 	"strings"
 
 	"github.com/magefile/mage/sh"
 )
 
-const (
-	workDir = "./programs/embench-iot"
+const workDir = "./programs/embench-iot"
 
-	elfPath        = "elf"
-	bootloaderPath = "bootloader.lua"
-)
-
-// Build build selected benchmark
+// Build builds the selected benchmark suite
 func Build(suite string) error {
-	if err := build(suite); err != nil {
-		return err
+	if err := bld.InDir(workDir, bld.ElfPath, func() error {
+		return build(suite)
+	}); err != nil {
+		return nil
 	}
 
-	return bootloader.Make(elfPath, bootloaderPath, nil)
+	return bootloader.Make(bld.ElfPath, bld.BootloaderPath, nil)
 }
 
 func build(suite string) error {
 	// List all suite sources.
-	srcDir := fmt.Sprintf("%s/src/%s/", workDir, suite)
+	srcDir := fmt.Sprintf("src/%s/", suite)
 	sources, err := filepath.Glob(srcDir + "*.c")
 	if err != nil {
 		return err
@@ -35,10 +33,10 @@ func build(suite string) error {
 
 	// List all required support sources.
 	sources = appendStrings(sources,
-		"${WORK_DIR}/support/beebsc.c",
-		"${WORK_DIR}/support/main.c",
-		"${WORK_DIR}/support/board.c",
-		"${WORK_DIR}/env/crt.S",
+		"support/beebsc.c",
+		"support/main.c",
+		"support/board.c",
+		"env/crt.S",
 	)
 
 	// Compile or assemble all required sources.
@@ -62,11 +60,7 @@ func build(suite string) error {
 }
 
 func compile(filePath, objPath, suite string) error {
-	return sh.RunWithV(
-		map[string]string{
-			"WORK_DIR": workDir,
-			"SUITE":    suite,
-		},
+	return sh.RunV(
 		"riscv64-unknown-elf-gcc",
 		"-ffreestanding",
 		"-nostartfiles",
@@ -75,9 +69,9 @@ func compile(filePath, objPath, suite string) error {
 		"-mabi=ilp32",
 		"-O2",
 
-		"-I${WORK_DIR}/src/${SUITE}",
-		"-I${WORK_DIR}/support",
-		"-I${WORK_DIR}/board",
+		"-Isrc/"+suite,
+		"-Isupport",
+		"-Iboard",
 		"-DCPU_MHZ=1",
 		"-DWARMUP_HEAT=0",
 
@@ -87,10 +81,7 @@ func compile(filePath, objPath, suite string) error {
 }
 
 func assemble(filePath, objPath string) error {
-	return sh.RunWithV(
-		map[string]string{
-			"WORK_DIR": workDir,
-		},
+	return sh.RunV(
 		"riscv64-unknown-elf-as",
 		"-march=rv32im",
 		"-mabi=ilp32",
@@ -101,10 +92,7 @@ func assemble(filePath, objPath string) error {
 }
 
 func link(objects []string) error {
-	return sh.RunWithV(
-		map[string]string{
-			"WORK_DIR": workDir,
-		},
+	return sh.RunV(
 		"riscv64-unknown-elf-gcc",
 		appendStrings(
 			"-ffreestanding",
@@ -114,11 +102,11 @@ func link(objects []string) error {
 			"-mabi=ilp32",
 			"-O2",
 			"-Xlinker",
-			"-T${WORK_DIR}/env/link.ld",
+			"-Tenv/link.ld",
 			objects,
 			"-lgcc",
 			"-lm",
-			"-o", elfPath,
+			"-o", bld.ElfPath,
 		)...,
 	)
 }
@@ -127,7 +115,7 @@ func makeObjPath(sourcePath string) string {
 	elems := strings.Split(sourcePath, "/")
 	file := elems[len(elems)-1]
 	fileName := strings.Split(file, ".")[0]
-	return "${WORK_DIR}/build/" + fileName + ".o"
+	return "./build/" + fileName + ".o"
 }
 
 // appendStrings appends strings and string slices into one slice.
