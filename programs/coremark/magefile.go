@@ -1,7 +1,4 @@
-//go:build mage
-// +build mage
-
-package main
+package coremark
 
 import (
 	"github.com/magefile/mage/sh"
@@ -14,7 +11,7 @@ const (
 	bootloaderPath = "bootloader.lua"
 )
 
-func Build() error {
+func BuildHost() error {
 	if err := sh.RunV(
 		"gcc",
 
@@ -35,7 +32,7 @@ func Build() error {
 
 		"-O2",
 
-		"-o", "coremark",
+		"-o", "coremark.run",
 	); err != nil {
 		return err
 	}
