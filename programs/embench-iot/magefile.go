@@ -32,7 +32,7 @@ func build(suite string) error {
 	}
 
 	// List all required support sources.
-	sources = appendStrings(sources,
+	sources = bld.AppendStrings(sources,
 		"support/beebsc.c",
 		"support/main.c",
 		"support/board.c",
@@ -41,8 +41,10 @@ func build(suite string) error {
 
 	// Compile or assemble all required sources.
 	objects := []string(nil)
+	defer func() { _ = bld.Clean(objects) }()
+
 	for _, sourcePath := range sources {
-		objPath := makeObjPath(sourcePath)
+		objPath := bld.MakeObjPath(sourcePath, "")
 		objects = append(objects, objPath)
 
 		if strings.HasSuffix(sourcePath, "c") {
@@ -94,7 +96,7 @@ func assemble(filePath, objPath string) error {
 func link(objects []string) error {
 	return sh.RunV(
 		"riscv64-unknown-elf-gcc",
-		appendStrings(
+		bld.AppendStrings(
 			"-ffreestanding",
 			"-nostartfiles",
 			"-specs=nosys.specs",
@@ -109,26 +111,4 @@ func link(objects []string) error {
 			"-o", bld.ElfPath,
 		)...,
 	)
-}
-
-func makeObjPath(sourcePath string) string {
-	elems := strings.Split(sourcePath, "/")
-	file := elems[len(elems)-1]
-	fileName := strings.Split(file, ".")[0]
-	return "./build/" + fileName + ".o"
-}
-
-// appendStrings appends strings and string slices into one slice.
-func appendStrings(ss ...interface{}) []string {
-	result := []string(nil)
-	for i := range ss {
-		switch v := ss[i].(type) {
-		case string:
-			result = append(result, v)
-		case []string:
-			result = append(result, v...)
-		}
-	}
-
-	return result
 }

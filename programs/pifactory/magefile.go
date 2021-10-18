@@ -19,6 +19,13 @@ func Build() error {
 }
 
 func build() error {
+	defer func() {
+		_ = bld.Clean([]string{
+			"pifactory.o",
+			"crt.o",
+		})
+	}()
+
 	if err := sh.RunV(
 		"riscv64-unknown-elf-gcc",
 		"-ffreestanding",
@@ -29,7 +36,7 @@ func build() error {
 		"-O2",
 
 		"-c", "src/pifactory.c",
-		"-o", "build/pifactory.o",
+		"-o", "pifactory.o",
 	); err != nil {
 		return err
 	}
@@ -40,7 +47,7 @@ func build() error {
 		"-mabi=ilp32",
 
 		"env/crt.S",
-		"-o", "build/crt.o",
+		"-o", "crt.o",
 	); err != nil {
 		return err
 	}
@@ -56,8 +63,8 @@ func build() error {
 
 		"-Xlinker",
 		"-Tenv/link.ld",
-		"build/pifactory.o",
-		"build/crt.o",
+		"pifactory.o",
+		"crt.o",
 		"-lgcc",
 		"-lm",
 		"-o", bld.ElfPath,
