@@ -2,6 +2,7 @@ package coremark
 
 import (
 	bld "riscv/build-scripts"
+	"strings"
 
 	"github.com/magefile/mage/sh"
 )
@@ -28,7 +29,6 @@ func buildHost() error {
 		"-I", "src/",
 
 		"-DCOMPILER_FLAGS=\"-O2\"",
-		"-DITERATIONS=2",
 		"-DCORE_DEBUG=1",
 
 		"-O2",
@@ -37,7 +37,6 @@ func buildHost() error {
 	)
 }
 
-//
 //// Build build selected benchmark
 //func Build(suite string) error {
 //	if err := build(suite); err != nil {
@@ -46,68 +45,61 @@ func buildHost() error {
 //
 //	return bootloader.Make(elfPath, bootloaderPath, nil)
 //}
-//
-//func build(suite string) error {
-//	// List all suite sources.
-//	srcDir := fmt.Sprintf("%s/src/%s/", workDir, suite)
-//	sources, err := filepath.Glob(srcDir + "*.c")
-//	if err != nil {
-//		return err
-//	}
-//
-//	// List all required support sources.
-//	sources = appendStrings(sources,
-//		"${WORK_DIR}/support/beebsc.c",
-//		"${WORK_DIR}/support/main.c",
-//		"${WORK_DIR}/support/board.c",
-//		"${WORK_DIR}/env/crt.S",
-//	)
-//
-//	// Compile or assemble all required sources.
-//	objects := []string(nil)
-//	for _, sourcePath := range sources {
-//		objPath := makeObjPath(sourcePath)
-//		objects = append(objects, objPath)
-//
-//		if strings.HasSuffix(sourcePath, "c") {
-//			if err := compile(sourcePath, objPath, suite); err != nil {
-//				return err
-//			}
-//		} else {
-//			if err := assemble(sourcePath, objPath); err != nil {
-//				return err
-//			}
-//		}
-//	}
-//
-//	return link(objects)
-//}
-//
-//func compile(filePath, objPath, suite string) error {
-//	return sh.RunWithV(
-//		map[string]string{
-//			"WORK_DIR": workDir,
-//			"SUITE":    suite,
-//		},
-//		"riscv64-unknown-elf-gcc",
-//		"-ffreestanding",
-//		"-nostartfiles",
-//		"-specs=nosys.specs",
-//		"-march=rv32im",
-//		"-mabi=ilp32",
-//		"-O2",
-//
-//		"-I${WORK_DIR}/src/${SUITE}",
-//		"-I${WORK_DIR}/support",
-//		"-I${WORK_DIR}/board",
-//		"-DCPU_MHZ=1",
-//		"-DWARMUP_HEAT=0",
-//
-//		"-c", filePath,
-//		"-o", objPath,
-//	)
-//}
-//
+
+func build(suite string) error {
+	sources := []string{
+		"src/core_list_join.c",
+		"src/core_main.c",
+		"src/core_matrix.c",
+		"src/core_state.c",
+		"src/core_util.c",
+
+		"env/core_portme.c",
+		"env/crt.S",
+	}
+
+	// Compile or assemble all required sources.
+	objects := []string(nil)
+	for _, sourcePath := range sources {
+		objPath := bld.MakeObjPath(sourcePath, "build/")
+		objects = append(objects, objPath)
+
+		if strings.HasSuffix(sourcePath, "c") {
+			if err := compile(sourcePath, objPath); err != nil {
+				return err
+			}
+		} else {
+			//if err := assemble(sourcePath, objPath); err != nil {
+			//	return err
+			//}
+		}
+	}
+
+	//return link(objects)
+	return nil
+}
+
+func compile(filePath, objPath string) error {
+	return sh.RunV(
+		"riscv64-unknown-elf-gcc",
+		"-ffreestanding",
+		"-nostartfiles",
+		"-specs=nosys.specs",
+		"-march=rv32im",
+		"-mabi=ilp32",
+		"-O2",
+
+		"-Isrc/",
+		"-Ienv/",
+
+		"-DCOMPILER_FLAGS=\"-O2\"",
+		"-DCORE_DEBUG=1",
+
+		"-c", filePath,
+		"-o", objPath,
+	)
+}
+
 //func assemble(filePath, objPath string) error {
 //	return sh.RunWithV(
 //		map[string]string{
