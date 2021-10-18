@@ -5,22 +5,21 @@ package main
 
 import (
 	"os"
+	bld "riscv/build-scripts"
+
 	// mage:import embench
 	_ "riscv/programs/embench-iot"
 	// mage:import compliance
 	_ "riscv/programs/compliance-tests"
+	// mage:import pifactory
+	_ "riscv/programs/pifactory"
 
 	"github.com/magefile/mage/sh"
 )
 
-const (
-	elfPath         = "elf"
-	disassemblyPath = "out.asm"
-)
-
-// Disassembly print disassembly of the elf file text section to out.asm file.
+// Disassembly prints disassembly of the elf file text section to out.asm file
 func Disassembly() error {
-	f, err := os.Create(disassemblyPath)
+	f, err := os.Create(bld.DisassemblyPath)
 	if err != nil {
 		return err
 	}
@@ -29,7 +28,7 @@ func Disassembly() error {
 		nil, f, os.Stderr,
 		"riscv64-linux-gnu-objdump",
 		"-d",
-		elfPath,
+		bld.ElfPath,
 		"-t",
 		"-Mno-aliases",
 		"--visualize-jumps",
@@ -38,7 +37,7 @@ func Disassembly() error {
 	return err
 }
 
-// PrintData print hex dump of the elf file data section
+// PrintData prints hex dump of the elf file data section
 func PrintData(section string) error {
-	return sh.RunV("riscv64-linux-gnu-objdump", "-s", "-j", section, elfPath)
+	return sh.RunV("riscv64-linux-gnu-objdump", "-s", "-j", section, bld.ElfPath)
 }

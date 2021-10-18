@@ -6,54 +6,52 @@ import (
 	"fmt"
 	"os"
 	"riscv/bootloader"
+	bld "riscv/build-scripts"
 	"strconv"
 
 	"github.com/magefile/mage/sh"
 )
 
-const (
-	workDir = "./programs/compliance-tests"
+const workDir = "./programs/compliance-tests"
 
-	elfPath        = "elf"
-	bootloaderPath = "bootloader.lua"
-)
-
-// Build build test for selected instruction
+// Build builds test for a selected instruction
 func Build(instruction string) error {
-	if err := build(instruction); err != nil {
-		return err
-	}
+	referenceData := []uint32(nil)
 
-	referenceData, err := readReference(instruction)
+	err := bld.InDir(workDir, bld.ElfPath, func() error {
+		err := error(nil)
+		if err = compile(instruction); err != nil {
+			return err
+		}
+
+		referenceData, err = readReference(instruction)
+		return err
+	})
 	if err != nil {
 		return err
 	}
 
-	return bootloader.Make(elfPath, bootloaderPath, &referenceData)
+	return bootloader.Make(bld.ElfPath, bld.BootloaderPath, &referenceData)
 }
 
-func build(instruction string) error {
-	return sh.RunWithV(
-		map[string]string{
-			"WORK_DIR":    workDir,
-			"INSTRUCTION": instruction,
-		},
+func compile(instruction string) error {
+	return sh.RunV(
 		"riscv64-unknown-elf-gcc",
 		"-ffreestanding",
 		"-nostdlib",
 		"-march=rv32im",
 		"-mabi=ilp32",
 
-		"${WORK_DIR}/src/${INSTRUCTION}-01.S",
-		"-I${WORK_DIR}/env",
-		"-T${WORK_DIR}/env/link.ld",
+		"src/"+instruction+"-01.S",
+		"-Ienv",
+		"-Tenv/link.ld",
 
-		"-o", elfPath,
+		"-o", bld.ElfPath,
 	)
 }
 
 func readReference(instruction string) ([]uint32, error) {
-	referencePath := fmt.Sprintf("%s/references/%s-01.reference_output", workDir, instruction)
+	referencePath := fmt.Sprintf("references/%s-01.reference_output", instruction)
 	f, err := os.Open(referencePath)
 	if err != nil {
 		return nil, err
