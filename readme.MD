@@ -11,9 +11,8 @@
   verification suites.
 - RAM and code ROM are 16kB, but can be easily extended.
 - The CPU blueprint found in `blueprints/cpu.txt` is preloaded with `nettle-sha256` benchmark from
-  the [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press `RESET` (
-  pushbuttons with red lamps) and `RUN` (pushbuttons with green lamps). The program should execute 8670 instructions in
-  24219 ticks.
+  the [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press`RUN` 
+  (pushbuttons with green lamps). The program should execute 8670 instructions in 24219 ticks.
 
 ## Factorio version and mods required
 
@@ -42,7 +41,7 @@ customized for the Factorio RISCV CPU. To run them:
 - Copy contents of `bootloader.lua` file to Factorio console, place the cursor over the wooden box on top of the ROM
   section and run the script. If selected program requires more than 16kB of code ROM, extend the ROM section by in-game
   copy tool and then run the script again.
-- Press `RESET` pushbutton.
+- Press `RESET` pushbutton if a program was previously run on the CPU.
 - Press `RUN` pushbutton.
 
 ## Building a program from scratch
