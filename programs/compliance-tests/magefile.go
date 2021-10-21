@@ -5,8 +5,8 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
-	"riscv/bootloader"
-	bld "riscv/build-scripts"
+	"riscv/tools/bootloader"
+	bld "riscv/tools/build-scripts"
 	"strconv"
 
 	"github.com/magefile/mage/sh"
