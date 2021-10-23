@@ -1,8 +1,8 @@
 package coremark
 
 import (
-	"riscv/bootloader"
-	bld "riscv/build-scripts"
+	"riscv/tools/bootloader"
+	bld "riscv/tools/build-scripts"
 	"strings"
 
 	"github.com/magefile/mage/sh"
