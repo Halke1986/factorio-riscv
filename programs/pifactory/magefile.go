@@ -1,8 +1,8 @@
 package pifactory
 
 import (
-	"riscv/bootloader"
-	bld "riscv/build-scripts"
+	"riscv/tools/bootloader"
+	bld "riscv/tools/build-scripts"
 
 	"github.com/magefile/mage/sh"
 )

@@ -5,7 +5,7 @@ package main
 
 import (
 	"os"
-	bld "riscv/build-scripts"
+	bld "riscv/tools/build-scripts"
 
 	// mage:import embench
 	_ "riscv/programs/embench-iot"
