@@ -4,11 +4,19 @@
 package main
 
 import (
+	_ "embed"
 	"fmt"
 	font "riscv/tools/font-generator/src"
+
+	"github.com/zachomedia/go-bdf"
 )
 
 const atlasSize = 32
+
+type glyph [15]int
+
+//go:embed tom-thumb.bdf
+var fontFile []byte
 
 func Build() error {
 	glyphs := []glyph(nil)
@@ -33,7 +41,45 @@ func Build() error {
 	return nil
 }
 
-type glyph [25]int
+func DecodeFontFile() error {
+	font, err := bdf.Parse(fontFile)
+	if err != nil {
+		return err
+	}
+
+	for c := ' '; c <= '~'; c++ {
+		character := font.CharMap[c]
+		lp := character.LowerPoint
+		img := character.Alpha
+
+		g := [6][3]bool{}
+
+		h := img.Rect.Max.Y - img.Rect.Min.Y
+		for y := img.Rect.Min.Y; y < img.Rect.Max.Y; y++ {
+			for x := img.Rect.Min.X; x < img.Rect.Max.X; x++ {
+				_, _, _, v := img.At(x, y).RGBA()
+				if v != 0 {
+					g[len(g)-h+y-lp[1]-1][x+lp[0]] = true
+				}
+			}
+		}
+
+		for y := 0; y < len(g)-1; y++ {
+			fmt.Printf("\"")
+			for x := 0; x < len(g[y]); x++ {
+				if g[y][x] {
+					fmt.Printf("X")
+				} else {
+					fmt.Printf(".")
+				}
+			}
+			fmt.Println("\",")
+		}
+		fmt.Print("},\n{\n")
+	}
+
+	return nil
+}
 
 func parseRawGlyph(r font.Glyph) glyph {
 	g := glyph{}
