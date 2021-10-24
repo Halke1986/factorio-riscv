@@ -8,30 +8,25 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-const workDir = "./programs/coremark"
+const workDir = "./programs/coremark/"
 
 // BuildHost builds the coremark binary for execution on host
 func BuildHost() error {
-	return bld.InDir(workDir, "coremark.run", buildHost)
-}
-
-func buildHost() error {
 	return sh.RunV(
 		"gcc",
 
-		"src/core_list_join.c",
-		"src/core_main.c",
-		"src/core_matrix.c",
-		"src/core_state.c",
-		"src/core_util.c",
-		"posix/core_portme.c",
+		workDir+"src/core_list_join.c",
+		workDir+"src/core_main.c",
+		workDir+"src/core_matrix.c",
+		workDir+"src/core_state.c",
+		workDir+"src/core_util.c",
+		workDir+"posix/core_portme.c",
 
-		"-I", "posix/",
-		"-I", "src/",
+		"-I", workDir+"posix/",
+		"-I", workDir+"src/",
 
 		"-DCOMPILER_FLAGS=\"-O2\"",
 		"-DCORE_DEBUG=1",
-
 		"-O2",
 
 		"-o", "coremark.run",
@@ -40,22 +35,14 @@ func buildHost() error {
 
 // Build builds coremark benchmark
 func Build() error {
-	if err := bld.InDir(workDir, bld.ElfPath, build); err != nil {
-		return err
-	}
-
-	return bootloader.Make(bld.ElfPath, bld.BootloaderPath, nil)
-}
-
-func build() error {
 	sources := []string{
-		"src/core_list_join.c",
-		"src/core_main.c",
-		"src/core_matrix.c",
-		"src/core_state.c",
-		"src/core_util.c",
+		workDir + "src/core_list_join.c",
+		workDir + "src/core_main.c",
+		workDir + "src/core_matrix.c",
+		workDir + "src/core_state.c",
+		workDir + "src/core_util.c",
 
-		"env/core_portme.c",
+		workDir + "board/core_portme.c",
 		"env/crt.S",
 	}
 
@@ -78,7 +65,11 @@ func build() error {
 		}
 	}
 
-	return link(objects)
+	if err := link(objects); err != nil {
+		return err
+	}
+
+	return bootloader.Make(bld.ElfPath, bld.BootloaderPath, nil)
 }
 
 func compile(filePath, objPath string) error {
@@ -91,8 +82,9 @@ func compile(filePath, objPath string) error {
 		"-mabi=ilp32",
 		"-O2",
 
-		"-Isrc/",
-		"-Ienv/",
+		"-I", workDir+"src/",
+		"-I", workDir+"board/",
+		"-I", "env/",
 
 		"-DCOMPILER_FLAGS=\"-O2\"",
 		"-DITERATIONS=1",
@@ -105,10 +97,7 @@ func compile(filePath, objPath string) error {
 }
 
 func assemble(filePath, objPath string) error {
-	return sh.RunWithV(
-		map[string]string{
-			"WORK_DIR": workDir,
-		},
+	return sh.RunV(
 		"riscv64-unknown-elf-as",
 		"-march=rv32im",
 		"-mabi=ilp32",
