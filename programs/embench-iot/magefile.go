@@ -10,22 +10,12 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-const workDir = "./programs/embench-iot"
+const workDir = "./programs/embench-iot/"
 
 // Build builds the selected benchmark suite
 func Build(suite string) error {
-	if err := bld.InDir(workDir, bld.ElfPath, func() error {
-		return build(suite)
-	}); err != nil {
-		return nil
-	}
-
-	return bootloader.Make(bld.ElfPath, bld.BootloaderPath, nil)
-}
-
-func build(suite string) error {
 	// List all suite sources.
-	srcDir := fmt.Sprintf("src/%s/", suite)
+	srcDir := fmt.Sprintf(workDir+"src/%s/", suite)
 	sources, err := filepath.Glob(srcDir + "*.c")
 	if err != nil {
 		return err
@@ -33,9 +23,9 @@ func build(suite string) error {
 
 	// List all required support sources.
 	sources = bld.AppendStrings(sources,
-		"support/beebsc.c",
-		"support/main.c",
-		"support/board.c",
+		workDir+"support/beebsc.c",
+		workDir+"support/main.c",
+		workDir+"support/board.c",
 		"env/crt.S",
 	)
 
@@ -58,7 +48,11 @@ func build(suite string) error {
 		}
 	}
 
-	return link(objects)
+	if err := link(objects); err != nil {
+		return err
+	}
+
+	return bootloader.Make(bld.ElfPath, bld.BootloaderPath, nil)
 }
 
 func compile(filePath, objPath, suite string) error {
@@ -71,9 +65,9 @@ func compile(filePath, objPath, suite string) error {
 		"-mabi=ilp32",
 		"-O2",
 
-		"-Isrc/"+suite,
-		"-Isupport",
-		"-Iboard",
+		"-I"+workDir+"src/"+suite,
+		"-I"+workDir+"support",
+		"-I"+workDir+"board",
 		"-DCPU_MHZ=1",
 		"-DWARMUP_HEAT=0",
 

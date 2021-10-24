@@ -7,18 +7,10 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-const workDir = "./programs/pifactory"
+const workDir = "./programs/pifactory/"
 
-// Build builds the pifactory program
+// Build builds the pifactory program.
 func Build() error {
-	if err := bld.InDir(workDir, bld.ElfPath, build); err != nil {
-		return nil
-	}
-
-	return bootloader.Make(bld.ElfPath, bld.BootloaderPath, nil)
-}
-
-func build() error {
 	defer func() {
 		_ = bld.Clean([]string{
 			"pifactory.o",
@@ -35,7 +27,7 @@ func build() error {
 		"-mabi=ilp32",
 		"-O2",
 
-		"-c", "src/pifactory.c",
+		"-c", workDir+"src/pifactory.c",
 		"-o", "pifactory.o",
 	); err != nil {
 		return err
@@ -52,7 +44,7 @@ func build() error {
 		return err
 	}
 
-	return sh.RunV(
+	if err := sh.RunV(
 		"riscv64-unknown-elf-gcc",
 		"-ffreestanding",
 		"-nostartfiles",
@@ -68,5 +60,9 @@ func build() error {
 		"-lgcc",
 		"-lm",
 		"-o", bld.ElfPath,
-	)
+	); err != nil {
+		return err
+	}
+
+	return bootloader.Make(bld.ElfPath, bld.BootloaderPath, nil)
 }

@@ -12,21 +12,15 @@ import (
 	"github.com/magefile/mage/sh"
 )
 
-const workDir = "./programs/compliance-tests"
+const workDir = "./programs/compliance-tests/"
 
 // Build builds test for a selected instruction
 func Build(instruction string) error {
-	referenceData := []uint32(nil)
-
-	err := bld.InDir(workDir, bld.ElfPath, func() error {
-		err := error(nil)
-		if err = compile(instruction); err != nil {
-			return err
-		}
-
-		referenceData, err = readReference(instruction)
+	if err := compile(instruction); err != nil {
 		return err
-	})
+	}
+
+	referenceData, err := readReference(instruction)
 	if err != nil {
 		return err
 	}
@@ -42,8 +36,8 @@ func compile(instruction string) error {
 		"-march=rv32im",
 		"-mabi=ilp32",
 
-		"src/"+instruction+"-01.S",
-		"-Ienv",
+		workDir+"src/"+instruction+"-01.S",
+		"-I"+workDir+"arch",
 		"-Tenv/link.ld",
 
 		"-o", bld.ElfPath,
@@ -51,7 +45,7 @@ func compile(instruction string) error {
 }
 
 func readReference(instruction string) ([]uint32, error) {
-	referencePath := fmt.Sprintf("references/%s-01.reference_output", instruction)
+	referencePath := fmt.Sprintf(workDir+"references/%s-01.reference_output", instruction)
 	f, err := os.Open(referencePath)
 	if err != nil {
 		return nil, err
