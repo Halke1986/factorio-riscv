@@ -23,6 +23,9 @@ Original Author: Shay Gal-on
 #ifndef CORE_PORTME_POSIX_OVERRIDES_H
 #define CORE_PORTME_POSIX_OVERRIDES_H
 
-/* None by default */
+#define HAS_STDIO 0
+#define HAS_PRINTF 0
+
+int ee_printf(const char *fmt, ...);
 
 #endif

@@ -21,9 +21,12 @@ func BuildHost() error {
 		workDir+"src/core_state.c",
 		workDir+"src/core_util.c",
 		workDir+"posix/core_portme.c",
+		workDir+"posix/core_portme_posix_overrides.c",
+		"env/printf/printf.c",
 
 		"-I", workDir+"posix/",
 		"-I", workDir+"src/",
+		"-I", "env/printf/",
 
 		"-DCOMPILER_FLAGS=\"-O2\"",
 		"-DCORE_DEBUG=1",
