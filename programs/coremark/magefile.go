@@ -3,7 +3,6 @@ package coremark
 import (
 	"riscv/tools/bootloader"
 	bld "riscv/tools/build-scripts"
-	"strings"
 
 	"github.com/magefile/mage/sh"
 )
@@ -29,7 +28,12 @@ func BuildHost() error {
 		"-I", "env/printf/",
 
 		"-DCOMPILER_FLAGS=\"-O2\"",
-		"-DCORE_DEBUG=1",
+		"-DMEM_LOCATION=\"Data and code in RAM\"",
+		"-DMAIN_HAS_NOARGC=1",
+		"-DSEED_METHOD=SEED_VOLATILE",
+		"-DVALIDATION_RUN=1",
+		"-DITERATIONS=1",
+		"-DREBUILD=1",
 		"-O2",
 
 		"-o", "coremark.run",
@@ -38,98 +42,45 @@ func BuildHost() error {
 
 // Build builds coremark benchmark
 func Build() error {
-	sources := []string{
-		workDir + "src/core_list_join.c",
-		workDir + "src/core_main.c",
-		workDir + "src/core_matrix.c",
-		workDir + "src/core_state.c",
-		workDir + "src/core_util.c",
+	if err := bld.Default(bld.Args{
+		Sources: []string{
+			workDir + "src/core_list_join.c",
+			workDir + "src/core_main.c",
+			workDir + "src/core_matrix.c",
+			workDir + "src/core_state.c",
+			workDir + "src/core_util.c",
 
-		workDir + "board/core_portme.c",
-		"env/printf/printf.c",
-		"env/printf/putchar.c",
-		"env/crt.S",
-	}
+			workDir + "board/core_portme.c",
+			"env/printf/printf.c",
+			"env/printf/putchar.c",
+			"env/crt.S",
+		},
+		IncludeDirs: []string{
+			workDir + "src/",
+			workDir + "board/",
+			"env/",
+			"env/printf",
+		},
+		Macros: []string{
+			"COMPILER_FLAGS=\"-O2\"",
+			"CLOCKS_PER_SEC=60",
+			"MEM_LOCATION = \"Data in RAM, code in ROM\"",
 
-	// Compile or assemble all required sources.
-	objects := []string(nil)
-	defer func() { _ = bld.Clean(objects) }()
-
-	for _, sourcePath := range sources {
-		objPath := bld.MakeObjPath(sourcePath, "")
-		objects = append(objects, objPath)
-
-		if strings.HasSuffix(sourcePath, "c") {
-			if err := compile(sourcePath, objPath); err != nil {
-				return err
-			}
-		} else {
-			if err := assemble(sourcePath, objPath); err != nil {
-				return err
-			}
-		}
-	}
-
-	if err := link(objects); err != nil {
+			"MAIN_HAS_NOARGC=1",
+			"SEED_METHOD=SEED_VOLATILE",
+			"VALIDATION_RUN=1",
+			"ITERATIONS=1",
+			"REBUILD=1",
+		},
+		Libraries: []string{
+			"gcc",
+			"m",
+		},
+		LinkerScript: "env/link.ld",
+		Optimization: "O2",
+	}); err != nil {
 		return err
 	}
 
 	return bootloader.Make(bld.ElfPath, bld.BootloaderPath, nil)
-}
-
-func compile(filePath, objPath string) error {
-	return sh.RunV(
-		"riscv64-unknown-elf-gcc",
-		"-ffreestanding",
-		"-nostartfiles",
-		"-specs=nosys.specs",
-		"-march=rv32im",
-		"-mabi=ilp32",
-		"-O2",
-
-		"-I", workDir+"src/",
-		"-I", workDir+"board/",
-		"-I", "env/",
-		"-I", "env/printf",
-
-		"-DCOMPILER_FLAGS=\"-O2\"",
-		"-DITERATIONS=1",
-		"-DCLOCKS_PER_SEC=60",
-		"-DCORE_DEBUG=1",
-
-		"-c", filePath,
-		"-o", objPath,
-	)
-}
-
-func assemble(filePath, objPath string) error {
-	return sh.RunV(
-		"riscv64-unknown-elf-as",
-		"-march=rv32im",
-		"-mabi=ilp32",
-
-		filePath,
-		"-o", objPath,
-	)
-}
-
-func link(objects []string) error {
-	return sh.RunV(
-		"riscv64-unknown-elf-gcc",
-		bld.AppendStrings(
-			"-ffreestanding",
-			"-nostartfiles",
-			"-specs=nosys.specs",
-			"-march=rv32im",
-			"-mabi=ilp32",
-			"-O2",
-
-			"-Xlinker",
-			"-Tenv/link.ld",
-			objects,
-			"-lgcc",
-			"-lm",
-			"-o", bld.ElfPath,
-		)...,
-	)
 }
