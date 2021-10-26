@@ -6,7 +6,7 @@ const (
 
 	srodataSectionName = ".srodata"
 	rodataSectionName  = ".rodata"
-	sdataSectionName   = ".sodata"
+	sdataSectionName   = ".sdata"
 	dataSectionName    = ".data"
 
 	wordSize = 4
