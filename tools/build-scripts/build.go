@@ -1,40 +1,94 @@
 package build
 
 import (
-	"os"
 	"strings"
+
+	"github.com/magefile/mage/sh"
 )
 
-// MakeObjPath strips source files of their extension and replaces it with.o.
-// The .o files are returned with buildDir prefix.
-func MakeObjPath(sourcePath, buildDir string) string {
-	elems := strings.Split(sourcePath, "/")
-	file := elems[len(elems)-1]
-	fileName := strings.Split(file, ".")[0]
-	return buildDir + fileName + ".o"
+type Args struct {
+	Sources      []string
+	IncludeDirs  []string
+	Macros       []string
+	Libraries    []string
+	LinkerScript string
+	Optimization string
 }
 
-// AppendStrings appends strings and string slices into one slice.
-func AppendStrings(ss ...interface{}) []string {
-	result := []string(nil)
-	for i := range ss {
-		switch v := ss[i].(type) {
-		case string:
-			result = append(result, v)
-		case []string:
-			result = append(result, v...)
+// Default Factorio RISCV program build script. Builds elf file in repo root.
+func Default(args Args) error {
+	// Decorate arguments.
+	includeDirs := addPrefix(args.IncludeDirs, "-I")
+	macros := addPrefix(args.Macros, "-D")
+	libraries := addPrefix(args.Libraries, "-l")
+
+	// Prepare object files cleaning.
+	objects := []string(nil)
+	defer func() { _ = Clean(objects) }()
+
+	// Build object files.
+	for _, source := range args.Sources {
+		objPath := MakeObjPath(source, "")
+		objects = append(objects, objPath)
+
+		if strings.HasSuffix(source, "c") {
+			// Compile source file.
+			if err := sh.RunV(
+				"riscv64-unknown-elf-gcc",
+				AppendStrings(
+					"-ffreestanding",
+					"-nostartfiles",
+					"-specs=nosys.specs",
+					"-march=rv32im",
+					"-mabi=ilp32",
+					"-"+args.Optimization,
+
+					includeDirs,
+					macros,
+					"-c", source,
+					"-o", objPath,
+				)...,
+			); err != nil {
+				return err
+			}
+		} else {
+			// Assemble source file.
+			if err := sh.RunV(
+				"riscv64-unknown-elf-as",
+				"-march=rv32im",
+				"-mabi=ilp32",
+				source,
+				"-o", objPath,
+			); err != nil {
+				return err
+			}
 		}
+	}
+
+	// Link objects.
+	return sh.RunV(
+		"riscv64-unknown-elf-gcc",
+		AppendStrings(
+			"-ffreestanding",
+			"-nostartfiles",
+			"-specs=nosys.specs",
+			"-march=rv32im",
+			"-mabi=ilp32",
+			"-"+args.Optimization,
+			"-Xlinker",
+			"-T"+args.LinkerScript,
+			objects,
+			libraries,
+			"-o", ElfPath,
+		)...,
+	)
+}
+
+func addPrefix(vals []string, prefix string) []string {
+	result := []string(nil)
+	for _, s := range vals {
+		result = append(result, prefix+s)
 	}
 
 	return result
-}
-
-// Clean removes the listed files.
-func Clean(files []string) error {
-	for _, f := range files {
-		if err := os.Remove(f); err != nil {
-			return err
-		}
-	}
-	return nil
 }
