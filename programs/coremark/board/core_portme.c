@@ -17,6 +17,7 @@ Original Author: Shay Gal-on
 */
 #include "coremark.h"
 #include "core_portme.h"
+#include "printf.h"
 
 #if VALIDATION_RUN
 volatile ee_s32 seed1_volatile = 0x3415;
@@ -151,4 +152,8 @@ portable_fini(core_portable *p)
 
 int ee_printf(const char *fmt, ...)
 {
+    va_list args;
+    va_start(args, fmt);
+    vprintf_(fmt, args);
+    va_end(args);
 }

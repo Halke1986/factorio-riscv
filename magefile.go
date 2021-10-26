@@ -33,7 +33,7 @@ func Disassembly() error {
 		bld.ElfPath,
 		"-t",
 		"-Mno-aliases",
-		"--visualize-jumps",
+		//"--visualize-jumps",
 	)
 
 	return err

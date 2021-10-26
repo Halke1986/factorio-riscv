@@ -46,6 +46,8 @@ func Build() error {
 		workDir + "src/core_util.c",
 
 		workDir + "board/core_portme.c",
+		"env/printf/printf.c",
+		"env/printf/putchar.c",
 		"env/crt.S",
 	}
 
@@ -88,6 +90,7 @@ func compile(filePath, objPath string) error {
 		"-I", workDir+"src/",
 		"-I", workDir+"board/",
 		"-I", "env/",
+		"-I", "env/printf",
 
 		"-DCOMPILER_FLAGS=\"-O2\"",
 		"-DITERATIONS=1",
