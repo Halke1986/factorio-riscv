@@ -64,7 +64,7 @@ func Build() error {
 		Macros: []string{
 			"COMPILER_FLAGS=\"-O2\"",
 			"CLOCKS_PER_SEC=60",
-			"MEM_LOCATION = \"Data in RAM, code in ROM\"",
+			"MEM_LOCATION = \"Data and code in ROM\"",
 
 			"MAIN_HAS_NOARGC=1",
 			"SEED_METHOD=SEED_VOLATILE",

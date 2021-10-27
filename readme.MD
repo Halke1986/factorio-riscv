@@ -11,7 +11,7 @@
   verification suites.
 - RAM and code ROM are 16kB, but can be easily extended.
 - The CPU blueprint found in `blueprints/cpu.txt` is preloaded with `nettle-sha256` benchmark from
-  the [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press`RUN` 
+  the [embench-iot](https://github.com/embench/embench-iot) suite. To run it, build the CPU in Factorio, press`RUN`
   (pushbuttons with green lamps). The program should execute 8670 instructions in 24219 ticks.
 
 ## Factorio version and mods required
@@ -48,12 +48,23 @@ customized for the Factorio RISCV CPU. To run them:
 
 TODO
 
+## I/O support
+
+- No input devices are supported.
+- A 40x3 character ASCII display is available as an output device. Text can be displayed using a fully fledged
+  embedded `printf` function defined in `env/printf` directory. The implementation of the `printf` function comes
+  from [mpaland/printf](https://github.com/mpaland/printf). The display and `printf` is used in `coremark` benchmark,
+  see `programs\coremark`. The display can be extended to 40x32 characters if needed.
+
 ## CPU verification
 
 - Each implemented instruction was verified with a test
   from [riscv-arch-test](https://github.com/riscv-non-isa/riscv-arch-test).
 - Benchmark suites from [embench-iot](https://github.com/embench/embench-iot) were successfully completed (`md5sum`
   was excluded, as it fails even on desktop environment and contains library calls like `printf` and `calloc`).
+- A verification run of [coremark](https://github.com/eembc/coremark) benchmark was successfully completed.
+
+![CPU](coremark-validation.png)
 
 ## CPU Performance
 
